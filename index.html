@@ -1,0 +1,2376 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Мой мессенджер</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #0f172a;
+        --panel-border: #1f2a44;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --input: #0b1220;
+        --border: #334155;
+        --bubble-other: #111b34;
+        --primary: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(1200px 600px at 20% 0%, #102047 0%, var(--bg) 55%);
+        margin: 0;
+        padding: 24px;
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 980px;
+        margin: 0 auto;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        display: flex;
+        min-height: 640px;
+      }
+
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #f8fafc;
+      }
+
+      /* Glass toggle (top-right) */
+      .glassToggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+        color: #cbd5e1;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: rgba(148, 163, 184, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 999px;
+        transition: background 0.16s ease, border-color 0.16s ease;
+      }
+
+      .slider::before {
+        content: "";
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        top: 2px;
+        background: rgba(219, 234, 254, 0.95);
+        border-radius: 50%;
+        transition: transform 0.16s ease;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      .switch input:checked + .slider {
+        background: rgba(37, 99, 235, 0.28);
+        border-color: rgba(37, 99, 235, 0.55);
+      }
+
+      .switch input:checked + .slider::before {
+        transform: translateX(20px);
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 280px;
+        padding: 14px;
+        border-right: 1px solid rgba(31, 42, 68, 0.9);
+        background: rgba(15, 23, 42, 0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 260px;
+      }
+
+      .sidebarHeader {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .sidebarHeader .title {
+        font-weight: 900;
+        color: #f8fafc;
+      }
+
+      .sidebarHeader .count {
+        font-weight: 900;
+        color: #dbeafe;
+        font-size: 13px;
+      }
+
+      .onlineList {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      .userItem {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(51, 65, 85, 0.7);
+        background: rgba(2, 6, 23, 0.25);
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #e5e7eb;
+        background: rgba(148, 163, 184, 0.16);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        flex: 0 0 auto;
+        user-select: none;
+      }
+
+      .avatar.sm {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+      }
+
+      .userInfo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .onlineDot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+        flex: 0 0 auto;
+      }
+
+      .userName {
+        font-weight: 800;
+        color: #e5e7eb;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+      }
+
+      /* Chat area */
+      .chatArea {
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+      }
+
+      #join {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      #usernameInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #usernameInput::placeholder {
+        color: #64748b;
+      }
+
+      button {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.5);
+        background: rgba(37, 99, 235, 0.15);
+        cursor: pointer;
+        font-weight: 700;
+        color: #dbeafe;
+      }
+
+      button:hover:not(:disabled) {
+        background: rgba(37, 99, 235, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      #chat {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        min-height: 520px;
+      }
+
+      .chatHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 8px 12px 8px;
+        border-bottom: 1px solid rgba(31, 42, 68, 0.9);
+        gap: 12px;
+      }
+
+      .status {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .statusText {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .chatMeta {
+        opacity: 0.85;
+        font-weight: 800;
+      }
+
+      .you {
+        font-weight: 800;
+        color: #dbeafe;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      #sidebarToggleBtn {
+        display: none;
+        width: 42px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid rgba(51, 65, 85, 0.7);
+        background: rgba(2, 6, 23, 0.2);
+        color: #e5e7eb;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .row {
+        display: flex;
+        width: 100%;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .row.mine {
+        justify-content: flex-end;
+      }
+
+      .row.other {
+        justify-content: flex-start;
+      }
+
+      .row.system {
+        justify-content: center;
+      }
+
+      .bubble {
+        max-width: 78%;
+        border-radius: 18px;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+      }
+
+      .bubble.mine {
+        background: rgba(37, 99, 235, 0.92);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .bubble.other {
+        background: var(--bubble-other);
+        color: var(--text);
+        border-color: rgba(51, 65, 85, 0.9);
+      }
+
+      .bubble.system {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-style: italic;
+        border-color: rgba(51, 65, 85, 0.8);
+      }
+
+      .meta {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 12px;
+        opacity: 0.95;
+      }
+
+      .meta .name {
+        font-weight: 800;
+      }
+
+      .meta .time {
+        opacity: 0.85;
+        font-size: 11px;
+      }
+
+      .text {
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.35;
+      }
+
+      #messageForm {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid rgba(31, 42, 68, 0.9);
+        background: rgba(15, 23, 42, 0.6);
+      }
+
+      #messageInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #sendBtn {
+        white-space: nowrap;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.6);
+        background: linear-gradient(
+          180deg,
+          rgba(37, 99, 235, 0.42) 0%,
+          rgba(37, 99, 235, 0.18) 100%
+        );
+        color: #dbeafe;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      #sendBtn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 40px rgba(37, 99, 235, 0.16);
+      }
+
+      #sendBtn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      @keyframes messagePop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .message-appear {
+        animation: messagePop 0.22s ease-out both;
+      }
+
+      .sidebarBackdrop {
+        display: none;
+      }
+
+      /* Mobile: hide sidebar and open by button */
+      @media (max-width: 860px) {
+        body {
+          padding: 14px;
+        }
+
+        .app {
+          max-width: 720px;
+          position: relative;
+        }
+
+        #sidebarToggleBtn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .sidebar {
+          position: absolute;
+          top: 0;
+          right: 0;
+          height: 100%;
+          z-index: 1000;
+          transform: translateX(110%);
+          transition: transform 0.18s ease;
+          border-right: none;
+          width: 300px;
+          padding: 14px;
+          background: rgba(15, 23, 42, 0.82);
+        }
+
+        body.sidebar-open .sidebar {
+          transform: translateX(0);
+        }
+
+        .sidebarBackdrop {
+          display: block;
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.35);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.18s ease;
+          z-index: 900;
+          border-radius: 16px;
+        }
+
+        body.sidebar-open .sidebarBackdrop {
+          opacity: 1;
+          pointer-events: auto;
+        }
+      }
+
+      /* Glass effect toggled by adding/removing body.glass-enabled */
+      body.glass-enabled .app,
+      body.glass-enabled .sidebar,
+      body.glass-enabled .chatHeader,
+      body.glass-enabled .messages,
+      body.glass-enabled #messageForm,
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput,
+      body.glass-enabled .userItem {
+        backdrop-filter: blur(16px);
+      }
+
+      body.glass-enabled .app {
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      body.glass-enabled .sidebar {
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      body.glass-enabled .chatHeader {
+        background: rgba(15, 23, 42, 0.3);
+      }
+
+      body.glass-enabled .messages {
+        background: rgba(2, 6, 23, 0.12);
+      }
+
+      body.glass-enabled #messageForm {
+        background: rgba(15, 23, 42, 0.42);
+      }
+
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput {
+        background: rgba(11, 18, 32, 0.55);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glassToggle">
+      <span>Glass</span>
+      <label class="switch" title="Включить/выключить glassmorphism">
+        <input type="checkbox" id="glassToggleInput" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="app">
+      <aside id="sidebar" class="sidebar" aria-label="Пользователи онлайн">
+        <div class="sidebarHeader">
+          <div class="title">Онлайн</div>
+          <div class="count" id="sidebarCount">0</div>
+        </div>
+        <div class="onlineList" id="onlineList"></div>
+      </aside>
+
+      <div class="sidebarBackdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+      <div class="chatArea">
+        <h1>Мой мессенджер</h1>
+
+        <div id="join">
+          <input
+            id="usernameInput"
+            maxlength="30"
+            placeholder="Введите имя (например: Абду)"
+          />
+          <button id="setNameBtn">Войти</button>
+        </div>
+
+        <div id="chat">
+          <div class="chatHeader">
+            <button id="sidebarToggleBtn" type="button" aria-label="Панель онлайн">
+              👥
+            </button>
+
+            <div class="status" id="chatTitle">
+              <span id="statusIcon">🟢</span>
+              <span class="statusText" id="statusText">онлайн</span>
+              <span class="chatMeta">· Онлайн: <span id="onlineCount">0</span></span>
+            </div>
+
+            <div class="you" id="youLabel">Вы: —</div>
+          </div>
+
+          <div id="messages" class="messages"></div>
+
+          <form id="messageForm">
+            <input
+              id="messageInput"
+              maxlength="500"
+              placeholder="Введите сообщение..."
+              autocomplete="off"
+            />
+            <button id="sendBtn" type="submit">Отправить ➤</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const glassToggleInput = document.getElementById("glassToggleInput");
+
+      const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+      const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+      const statusIcon = document.getElementById("statusIcon");
+      const statusText = document.getElementById("statusText");
+
+      const onlineCountEl = document.getElementById("onlineCount");
+      const sidebarCountEl = document.getElementById("sidebarCount");
+      const onlineListEl = document.getElementById("onlineList");
+
+      function setGlassEnabled(enabled) {
+        document.body.classList.toggle("glass-enabled", enabled);
+        if (glassToggleInput) glassToggleInput.checked = enabled;
+        try {
+          localStorage.setItem("glassEnabled", enabled ? "1" : "0");
+        } catch (_) {}
+      }
+
+      let initialGlass = true;
+      try {
+        const saved = localStorage.getItem("glassEnabled");
+        if (saved === "0") initialGlass = false;
+      } catch (_) {}
+      setGlassEnabled(initialGlass);
+
+      if (glassToggleInput) {
+        glassToggleInput.addEventListener("change", () => {
+          setGlassEnabled(glassToggleInput.checked);
+        });
+      }
+
+      function setSidebarOpen(open) {
+        document.body.classList.toggle("sidebar-open", open);
+      }
+
+      if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener("click", () => {
+          const open = !document.body.classList.contains("sidebar-open");
+          setSidebarOpen(open);
+        });
+      }
+      if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+      }
+
+      function setSocketStatus(connected) {
+        if (!statusIcon || !statusText) return;
+        statusIcon.textContent = connected ? "🟢" : "🔴";
+        statusText.textContent = connected ? "онлайн" : "офлайн";
+      }
+
+      socket.on("connect", () => setSocketStatus(true));
+      socket.on("disconnect", () => setSocketStatus(false));
+      setSocketStatus(socket.connected);
+
+      const usernameInput = document.getElementById("usernameInput");
+      const setNameBtn = document.getElementById("setNameBtn");
+      const joinDiv = document.getElementById("join");
+      const chatDiv = document.getElementById("chat");
+
+      const youLabel = document.getElementById("youLabel");
+      const messagesDiv = document.getElementById("messages");
+      const messageForm = document.getElementById("messageForm");
+      const messageInput = document.getElementById("messageInput");
+
+      let isJoined = false;
+      let currentUsername = "";
+
+      function formatTime(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function getInitial(name) {
+        const n = String(name || "").trim();
+        if (!n) return "?";
+        return n[0].toUpperCase();
+      }
+
+      function renderOnlineUsers(list) {
+        const users = Array.isArray(list) ? list : [];
+        onlineListEl.innerHTML = "";
+
+        onlineCountEl.textContent = String(users.length);
+        sidebarCountEl.textContent = String(users.length);
+
+        users.forEach((u) => {
+          const name = u?.name || "Без имени";
+
+          const item = document.createElement("div");
+          item.className = "userItem";
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar sm";
+          avatar.textContent = getInitial(name);
+
+          const info = document.createElement("div");
+          info.className = "userInfo";
+
+          const dot = document.createElement("span");
+          dot.className = "onlineDot";
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "userName";
+          nameEl.textContent = name;
+
+          info.appendChild(dot);
+          info.appendChild(nameEl);
+
+          item.appendChild(avatar);
+          item.appendChild(info);
+
+          onlineListEl.appendChild(item);
+        });
+      }
+
+      function appendChatMessage({ name, text, time }) {
+        const isMine = name === currentUsername;
+
+        const row = document.createElement("div");
+        row.className = `row ${isMine ? "mine" : "other"}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = getInitial(name);
+
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${isMine ? "mine" : "other"}`;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "name";
+        nameEl.textContent = name || "Без имени";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(nameEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function appendSystemMessage({ text, time }) {
+        const row = document.createElement("div");
+        row.className = "row system";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = "ℹ️";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble system";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const labelEl = document.createElement("span");
+        labelEl.className = "name";
+        labelEl.textContent = "Система";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(labelEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      setNameBtn.addEventListener("click", () => {
+        const name = usernameInput.value.trim();
+        if (!name) {
+          alert("Введите имя");
+          return;
+        }
+
+        socket.emit("set username", name);
+        isJoined = true;
+        currentUsername = name;
+        youLabel.textContent = `Вы: ${name}`;
+
+        joinDiv.style.display = "none";
+        chatDiv.style.display = "flex";
+        messageInput.focus();
+      });
+
+      messageForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!isJoined) return;
+
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        socket.emit("chat message", { text });
+        messageInput.value = "";
+      });
+
+      socket.on("chat system", (data) => {
+        appendSystemMessage({
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      socket.on("chat message", (data) => {
+        appendChatMessage({
+          name: data?.name || "Без имени",
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      // Real-time online list
+      socket.on("users online", (list) => {
+        renderOnlineUsers(list);
+      });
+    </script>
+  </body>
+</html>
+
+<!--
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Мой мессенджер</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #0f172a;
+        --panel-border: #1f2a44;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --input: #0b1220;
+        --border: #334155;
+        --primary: #2563eb;
+        --bubble-other: #111b34;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(1200px 600px at 20% 0%, #102047 0%, var(--bg) 55%);
+        margin: 0;
+        padding: 24px;
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 980px;
+        margin: 0 auto;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        display: flex;
+        min-height: 640px;
+      }
+
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #f8fafc;
+      }
+
+      /* --------- Glass toggle UI ---------- */
+      .glassToggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+        color: #cbd5e1;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: rgba(148, 163, 184, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 999px;
+        transition: background 0.16s ease, border-color 0.16s ease;
+      }
+
+      .slider::before {
+        content: "";
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        top: 2px;
+        background: rgba(219, 234, 254, 0.95);
+        border-radius: 50%;
+        transition: transform 0.16s ease;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      .switch input:checked + .slider {
+        background: rgba(37, 99, 235, 0.28);
+        border-color: rgba(37, 99, 235, 0.55);
+      }
+
+      .switch input:checked + .slider::before {
+        transform: translateX(20px);
+      }
+
+      /* --------- Sidebar (online users) ---------- */
+      .sidebar {
+        width: 280px;
+        padding: 14px;
+        border-right: 1px solid rgba(31, 42, 68, 0.9);
+        background: rgba(15, 23, 42, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .sidebarHeader {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .sidebarHeader .title {
+        font-weight: 900;
+        color: #f8fafc;
+      }
+
+      .sidebarHeader .count {
+        font-weight: 900;
+        color: #dbeafe;
+        font-size: 13px;
+      }
+
+      .onlineList {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+      }
+
+      .userItem {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(51, 65, 85, 0.7);
+        background: rgba(2, 6, 23, 0.25);
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #e5e7eb;
+        background: rgba(148, 163, 184, 0.16);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        flex: 0 0 auto;
+        user-select: none;
+      }
+
+      .avatar.sm {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+      }
+
+      .userInfo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .onlineDot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+        flex: 0 0 auto;
+      }
+
+      .userName {
+        font-weight: 800;
+        color: #e5e7eb;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+      }
+
+      /* --------- Chat area ---------- */
+      .chatArea {
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+      }
+
+      #join {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      #usernameInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #usernameInput::placeholder {
+        color: #64748b;
+      }
+
+      button {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.5);
+        background: rgba(37, 99, 235, 0.15);
+        cursor: pointer;
+        font-weight: 700;
+        color: #dbeafe;
+      }
+
+      button:hover:not(:disabled) {
+        background: rgba(37, 99, 235, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      #chat {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        height: 100%;
+        min-height: 520px;
+      }
+
+      .chatHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 8px 12px 8px;
+        border-bottom: 1px solid rgba(31, 42, 68, 0.9);
+        gap: 12px;
+      }
+
+      .status {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .status .statusText {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .status .chatMeta {
+        opacity: 0.8;
+        font-weight: 800;
+      }
+
+      .you {
+        font-weight: 800;
+        color: #dbeafe;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .row {
+        display: flex;
+        width: 100%;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .row.mine {
+        justify-content: flex-end;
+      }
+
+      .row.other {
+        justify-content: flex-start;
+      }
+
+      .row.system {
+        justify-content: center;
+      }
+
+      .bubble {
+        max-width: 78%;
+        border-radius: 18px;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+      }
+
+      .bubble.mine {
+        background: rgba(37, 99, 235, 0.92);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .bubble.other {
+        background: var(--bubble-other);
+        color: var(--text);
+        border-color: rgba(51, 65, 85, 0.9);
+      }
+
+      .bubble.system {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-style: italic;
+        border-color: rgba(51, 65, 85, 0.8);
+      }
+
+      .meta {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 12px;
+        opacity: 0.95;
+      }
+
+      .meta .name {
+        font-weight: 800;
+      }
+
+      .meta .time {
+        opacity: 0.85;
+        font-size: 11px;
+      }
+
+      .text {
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.35;
+      }
+
+      #messageForm {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid rgba(31, 42, 68, 0.9);
+        background: rgba(15, 23, 42, 0.6);
+      }
+
+      #messageInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #sendBtn {
+        white-space: nowrap;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.6);
+        background: linear-gradient(
+          180deg,
+          rgba(37, 99, 235, 0.42) 0%,
+          rgba(37, 99, 235, 0.18) 100%
+        );
+        color: #dbeafe;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      #sendBtn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 40px rgba(37, 99, 235, 0.16);
+      }
+
+      #sendBtn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      @keyframes messagePop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .message-appear {
+        animation: messagePop 0.22s ease-out both;
+      }
+
+      /* Mobile: sidebar hidden, toggle opens it */
+      #sidebarToggleBtn {
+        display: none;
+        width: 42px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid rgba(51, 65, 85, 0.7);
+        background: rgba(2, 6, 23, 0.2);
+        color: #e5e7eb;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .sidebarBackdrop {
+        display: none;
+      }
+
+      @media (max-width: 860px) {
+        body {
+          padding: 14px;
+        }
+
+        .app {
+          max-width: 720px;
+          position: relative;
+        }
+
+        .sidebar {
+          position: absolute;
+          top: 0;
+          right: 0;
+          height: 100%;
+          z-index: 1000;
+          transform: translateX(110%);
+          transition: transform 0.18s ease;
+          border-right: none;
+          width: 300px;
+          background: rgba(15, 23, 42, 0.82);
+        }
+
+        body.sidebar-open .sidebar {
+          transform: translateX(0);
+        }
+
+        .sidebarBackdrop {
+          display: block;
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.35);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.18s ease;
+        }
+
+        body.sidebar-open .sidebarBackdrop {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        #sidebarToggleBtn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      /* Glass effect toggled by adding/removing body.glass-enabled */
+      body.glass-enabled .app,
+      body.glass-enabled .sidebar,
+      body.glass-enabled .chatHeader,
+      body.glass-enabled .messages,
+      body.glass-enabled #messageForm,
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput,
+      body.glass-enabled .userItem {
+        backdrop-filter: blur(16px);
+      }
+
+      body.glass-enabled .app {
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      body.glass-enabled .sidebar {
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      body.glass-enabled .chatHeader {
+        background: rgba(15, 23, 42, 0.3);
+      }
+
+      body.glass-enabled .messages {
+        background: rgba(2, 6, 23, 0.12);
+      }
+
+      body.glass-enabled #messageForm {
+        background: rgba(15, 23, 42, 0.42);
+      }
+
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput {
+        background: rgba(11, 18, 32, 0.55);
+      }
+
+      body.glass-enabled .bubble.other {
+        background: rgba(17, 27, 52, 0.55);
+        backdrop-filter: blur(14px);
+      }
+
+      body.glass-enabled .bubble.mine {
+        background: rgba(37, 99, 235, 0.55);
+        backdrop-filter: blur(14px);
+      }
+
+      body.glass-enabled .bubble.system {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(14px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glassToggle">
+      <span>Glass</span>
+      <label class="switch" title="Включить/выключить glassmorphism">
+        <input type="checkbox" id="glassToggleInput" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="app">
+      <aside id="sidebar" class="sidebar" aria-label="Пользователи онлайн">
+        <div class="sidebarHeader">
+          <div class="title">Онлайн</div>
+          <div class="count" id="sidebarCount">0</div>
+        </div>
+        <div class="onlineList" id="onlineList"></div>
+      </aside>
+
+      <div class="sidebarBackdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+      <div class="chatArea">
+        <h1>Мой мессенджер</h1>
+
+        <div id="join">
+          <input
+            id="usernameInput"
+            maxlength="30"
+            placeholder="Введите имя (например: Абду)"
+          />
+          <button id="setNameBtn">Войти</button>
+        </div>
+
+        <div id="chat">
+          <div class="chatHeader">
+            <button id="sidebarToggleBtn" type="button" aria-label="Открыть пользователей">
+              👥
+            </button>
+
+            <div class="status" id="chatTitle">
+              <span id="statusIcon">🟢</span>
+              <span class="statusText" id="statusText">онлайн</span>
+              <span class="chatMeta"
+                >· Онлайн: <span id="onlineCount">0</span></span
+              >
+            </div>
+
+            <div class="you" id="youLabel">Вы: —</div>
+          </div>
+
+          <div id="messages" class="messages"></div>
+
+          <form id="messageForm">
+            <input
+              id="messageInput"
+              maxlength="500"
+              placeholder="Введите сообщение..."
+              autocomplete="off"
+            />
+            <button id="sendBtn" type="submit">Отправить ➤</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const glassToggleInput = document.getElementById("glassToggleInput");
+      const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+      const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+      const statusIcon = document.getElementById("statusIcon");
+      const statusText = document.getElementById("statusText");
+      const onlineCountEl = document.getElementById("onlineCount");
+      const sidebarCountEl = document.getElementById("sidebarCount");
+      const onlineListEl = document.getElementById("onlineList");
+
+      function setGlassEnabled(enabled) {
+        document.body.classList.toggle("glass-enabled", enabled);
+        if (glassToggleInput) glassToggleInput.checked = enabled;
+        try {
+          localStorage.setItem("glassEnabled", enabled ? "1" : "0");
+        } catch (_) {}
+      }
+
+      let initialGlass = true;
+      try {
+        const saved = localStorage.getItem("glassEnabled");
+        if (saved === "0") initialGlass = false;
+      } catch (_) {}
+      setGlassEnabled(initialGlass);
+
+      if (glassToggleInput) {
+        glassToggleInput.addEventListener("change", () => {
+          setGlassEnabled(glassToggleInput.checked);
+        });
+      }
+
+      function setSidebarOpen(open) {
+        document.body.classList.toggle("sidebar-open", open);
+      }
+
+      if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener("click", () => {
+          const open = !document.body.classList.contains("sidebar-open");
+          setSidebarOpen(open);
+        });
+      }
+      if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+      }
+
+      function setSocketStatus(connected) {
+        if (!statusIcon || !statusText) return;
+        statusIcon.textContent = connected ? "🟢" : "🔴";
+        statusText.textContent = connected ? "онлайн" : "офлайн";
+      }
+
+      socket.on("connect", () => setSocketStatus(true));
+      socket.on("disconnect", () => setSocketStatus(false));
+      setSocketStatus(socket.connected);
+
+      const usernameInput = document.getElementById("usernameInput");
+      const setNameBtn = document.getElementById("setNameBtn");
+      const joinDiv = document.getElementById("join");
+      const chatDiv = document.getElementById("chat");
+
+      const youLabel = document.getElementById("youLabel");
+      const messagesDiv = document.getElementById("messages");
+      const messageForm = document.getElementById("messageForm");
+      const messageInput = document.getElementById("messageInput");
+
+      let isJoined = false;
+      let currentUsername = "";
+
+      function formatTime(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function getInitial(name) {
+        const n = String(name || "").trim();
+        if (!n) return "?";
+        return n[0].toUpperCase();
+      }
+
+      function renderOnlineUsers(list) {
+        const users = Array.isArray(list) ? list : [];
+
+        onlineListEl.innerHTML = "";
+
+        // count in header + sidebar
+        onlineCountEl.textContent = String(users.length);
+        sidebarCountEl.textContent = String(users.length);
+
+        users.forEach((u) => {
+          const name = u?.name || "Без имени";
+
+          const item = document.createElement("div");
+          item.className = "userItem";
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar sm";
+          avatar.textContent = getInitial(name);
+
+          const info = document.createElement("div");
+          info.className = "userInfo";
+
+          const dot = document.createElement("span");
+          dot.className = "onlineDot";
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "userName";
+          nameEl.textContent = name;
+
+          info.appendChild(dot);
+          info.appendChild(nameEl);
+
+          item.appendChild(avatar);
+          item.appendChild(info);
+
+          onlineListEl.appendChild(item);
+        });
+      }
+
+      function appendChatMessage({ name, text, time }) {
+        const isMine = name === currentUsername;
+
+        const row = document.createElement("div");
+        row.className = `row ${isMine ? "mine" : "other"}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = getInitial(name);
+
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${isMine ? "mine" : "other"}`;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "name";
+        nameEl.textContent = name || "Без имени";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(nameEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function appendSystemMessage({ text, time }) {
+        const row = document.createElement("div");
+        row.className = "row system";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = "ℹ️";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble system";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const labelEl = document.createElement("span");
+        labelEl.className = "name";
+        labelEl.textContent = "Система";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(labelEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      setNameBtn.addEventListener("click", () => {
+        const name = usernameInput.value.trim();
+        if (!name) {
+          alert("Введите имя");
+          return;
+        }
+
+        socket.emit("set username", name);
+        isJoined = true;
+        currentUsername = name;
+        youLabel.textContent = `Вы: ${name}`;
+
+        joinDiv.style.display = "none";
+        chatDiv.style.display = "flex";
+        messageInput.focus();
+      });
+
+      messageForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!isJoined) return;
+
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        socket.emit("chat message", { text });
+        messageInput.value = "";
+      });
+
+      socket.on("chat system", (data) => {
+        appendSystemMessage({
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      socket.on("chat message", (data) => {
+        appendChatMessage({
+          name: data?.name || "Без имени",
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      // Online list synchronization
+      socket.on("users online", (list) => {
+        renderOnlineUsers(list);
+      });
+    </script>
+  </body>
+</html>
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Мой мессенджер</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #0f172a;
+        --panel-border: #1f2a44;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --input: #0b1220;
+        --border: #334155;
+        --primary: #2563eb;
+        --bubble-other: #111b34;
+        --bubble-system: #0b1220;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(1200px 600px at 20% 0%, #102047 0%, var(--bg) 55%);
+        margin: 0;
+        padding: 24px;
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 720px;
+        margin: 0 auto;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #f8fafc;
+      }
+
+      #join {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      #usernameInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #usernameInput::placeholder {
+        color: #64748b;
+      }
+
+      button {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.5);
+        background: rgba(37, 99, 235, 0.15);
+        cursor: pointer;
+        font-weight: 700;
+        color: #dbeafe;
+      }
+
+      button:hover:not(:disabled) {
+        background: rgba(37, 99, 235, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      #chat {
+        display: none;
+        flex-direction: column;
+        height: 560px;
+      }
+
+      .chatHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 8px 12px 8px;
+        border-bottom: 1px solid rgba(31, 42, 68, 0.9);
+      }
+
+      .chatHeader .status {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .chatHeader .you {
+        font-weight: 800;
+        color: #dbeafe;
+        font-size: 13px;
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .row {
+        display: flex;
+        width: 100%;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .row.mine {
+        justify-content: flex-end;
+      }
+
+      .row.other {
+        justify-content: flex-start;
+      }
+
+      .row.system {
+        justify-content: center;
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #e5e7eb;
+        background: rgba(148, 163, 184, 0.16);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        flex: 0 0 auto;
+        user-select: none;
+      }
+
+      .avatar.system {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(148, 163, 184, 0.2);
+        font-size: 14px;
+      }
+
+      .bubble {
+        max-width: 78%;
+        border-radius: 18px;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+      }
+
+      .bubble.mine {
+        background: rgba(37, 99, 235, 0.92);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .bubble.other {
+        background: var(--bubble-other);
+        color: var(--text);
+        border-color: rgba(51, 65, 85, 0.9);
+      }
+
+      .bubble.system {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-style: italic;
+        border-color: rgba(51, 65, 85, 0.8);
+      }
+
+      .meta {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 12px;
+        opacity: 0.95;
+      }
+
+      .meta .name {
+        font-weight: 800;
+      }
+
+      .meta .time {
+        opacity: 0.85;
+        font-size: 11px;
+      }
+
+      .row.mine .meta {
+        justify-content: space-between;
+      }
+
+      .row.system .meta {
+        justify-content: center;
+        margin-bottom: 0;
+      }
+
+      .text {
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.35;
+      }
+
+      #messageForm {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid rgba(31, 42, 68, 0.9);
+        background: rgba(15, 23, 42, 0.6);
+      }
+
+      #messageInput {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+      }
+
+      #sendBtn {
+        white-space: nowrap;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.6);
+        background: linear-gradient(
+          180deg,
+          rgba(37, 99, 235, 0.42) 0%,
+          rgba(37, 99, 235, 0.18) 100%
+        );
+        color: #dbeafe;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      #sendBtn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 40px rgba(37, 99, 235, 0.16);
+      }
+
+      #sendBtn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      @keyframes messagePop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .message-appear {
+        animation: messagePop 0.22s ease-out both;
+      }
+
+      /* Glassmorphism switch (top-right corner) */
+      .glassToggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+        color: #cbd5e1;
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: rgba(148, 163, 184, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 999px;
+        transition: background 0.16s ease, border-color 0.16s ease;
+      }
+
+      .slider::before {
+        content: "";
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        top: 2px;
+        background: rgba(219, 234, 254, 0.95);
+        border-radius: 50%;
+        transition: transform 0.16s ease;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      .switch input:checked + .slider {
+        background: rgba(37, 99, 235, 0.28);
+        border-color: rgba(37, 99, 235, 0.55);
+      }
+
+      .switch input:checked + .slider::before {
+        transform: translateX(20px);
+      }
+
+      /* Glass effect toggled by adding/removing body.glass-enabled */
+      body.glass-enabled .app,
+      body.glass-enabled .chatHeader,
+      body.glass-enabled .messages,
+      body.glass-enabled #messageForm,
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput {
+        backdrop-filter: blur(16px);
+      }
+
+      body.glass-enabled .app {
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      body.glass-enabled .chatHeader {
+        background: rgba(15, 23, 42, 0.3);
+      }
+
+      body.glass-enabled .messages {
+        background: rgba(2, 6, 23, 0.12);
+      }
+
+      body.glass-enabled #messageForm {
+        background: rgba(15, 23, 42, 0.42);
+      }
+
+      body.glass-enabled #usernameInput,
+      body.glass-enabled #messageInput {
+        background: rgba(11, 18, 32, 0.55);
+      }
+
+      body.glass-enabled .bubble.other {
+        background: rgba(17, 27, 52, 0.55);
+        backdrop-filter: blur(14px);
+      }
+
+      body.glass-enabled .bubble.mine {
+        background: rgba(37, 99, 235, 0.55);
+        backdrop-filter: blur(14px);
+      }
+
+      body.glass-enabled .bubble.system {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(14px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glassToggle">
+      <span>Glass</span>
+      <label class="switch" title="Включить/выключить glassmorphism">
+        <input type="checkbox" id="glassToggleInput" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="app">
+      <h1>Мой мессенджер</h1>
+
+      <div id="join">
+        <input
+          id="usernameInput"
+          maxlength="30"
+          placeholder="Введите имя (например: Абду)"
+        />
+        <button id="setNameBtn">Войти</button>
+      </div>
+
+      <div id="chat">
+        <div class="chatHeader">
+          <div class="status" id="chatTitle">
+            <span id="statusIcon">🟢</span>
+            <span id="statusText">онлайн</span>
+            <span style="opacity: 0.8">· Чат</span>
+          </div>
+          <div class="you" id="youLabel">Вы: —</div>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <form id="messageForm">
+          <input
+            id="messageInput"
+            maxlength="500"
+            placeholder="Введите сообщение..."
+            autocomplete="off"
+          />
+          <button id="sendBtn" type="submit">Отправить ➤</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const glassToggleInput = document.getElementById("glassToggleInput");
+      const statusIcon = document.getElementById("statusIcon");
+      const statusText = document.getElementById("statusText");
+
+      function setGlassEnabled(enabled) {
+        document.body.classList.toggle("glass-enabled", enabled);
+        if (glassToggleInput) glassToggleInput.checked = enabled;
+        try {
+          localStorage.setItem("glassEnabled", enabled ? "1" : "0");
+        } catch (_) {}
+      }
+
+      // По умолчанию glass включен
+      let initialGlass = true;
+      try {
+        const saved = localStorage.getItem("glassEnabled");
+        if (saved === "0") initialGlass = false;
+      } catch (_) {}
+      setGlassEnabled(initialGlass);
+
+      if (glassToggleInput) {
+        glassToggleInput.addEventListener("change", () => {
+          setGlassEnabled(glassToggleInput.checked);
+        });
+      }
+
+      function setSocketStatus(connected) {
+        if (!statusIcon || !statusText) return;
+        statusIcon.textContent = connected ? "🟢" : "🔴";
+        statusText.textContent = connected ? "онлайн" : "офлайн";
+      }
+
+      socket.on("connect", () => setSocketStatus(true));
+      socket.on("disconnect", () => setSocketStatus(false));
+      setSocketStatus(socket.connected);
+
+      const usernameInput = document.getElementById("usernameInput");
+      const setNameBtn = document.getElementById("setNameBtn");
+
+      const joinDiv = document.getElementById("join");
+      const chatDiv = document.getElementById("chat");
+
+      const youLabel = document.getElementById("youLabel");
+      const messagesDiv = document.getElementById("messages");
+      const messageForm = document.getElementById("messageForm");
+      const messageInput = document.getElementById("messageInput");
+
+      let isJoined = false;
+      let currentUsername = "";
+
+      function formatTime(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function getInitial(name) {
+        const n = String(name || "").trim();
+        if (!n) return "?";
+        return n[0].toUpperCase();
+      }
+
+      function appendChatMessage({ name, text, time }) {
+        const isMine = name === currentUsername;
+
+        const row = document.createElement("div");
+        row.className = `row ${isMine ? "mine" : "other"}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = getInitial(name);
+
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${isMine ? "mine" : "other"}`;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "name";
+        nameEl.textContent = name || "Без имени";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(nameEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        // Плавное появление нового сообщения
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function appendSystemMessage({ text, time }) {
+        const row = document.createElement("div");
+        row.className = "row system";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar system";
+        avatar.textContent = "ℹ️";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble system";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const labelEl = document.createElement("span");
+        labelEl.className = "name";
+        labelEl.textContent = "Система";
+
+        const timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatTime(time);
+
+        meta.appendChild(labelEl);
+        meta.appendChild(timeEl);
+
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text || "";
+
+        bubble.appendChild(meta);
+        bubble.appendChild(textEl);
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+
+        row.classList.add("message-appear");
+
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      // Входим в чат по имени
+      setNameBtn.addEventListener("click", () => {
+        const name = usernameInput.value.trim();
+        if (!name) {
+          alert("Введите имя");
+          return;
+        }
+
+        socket.emit("set username", name);
+        isJoined = true;
+        currentUsername = name;
+        youLabel.textContent = `Вы: ${name}`;
+
+        joinDiv.style.display = "none";
+        chatDiv.style.display = "flex";
+        messageInput.focus();
+      });
+
+      // Сообщения от сервера
+      socket.on("chat system", (data) => {
+        appendSystemMessage({
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      socket.on("chat message", (data) => {
+        appendChatMessage({
+          name: data?.name || "Без имени",
+          text: data?.text || "",
+          time: data?.time || "",
+        });
+      });
+
+      // Отправка сообщения
+      messageForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!isJoined) return;
+
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        socket.emit("chat message", { text });
+        messageInput.value = "";
+      });
+    </script>
+  </body>
+</html>
+
+-->
+
