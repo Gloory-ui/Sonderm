@@ -675,6 +675,7 @@
 
       let isJoined = false;
       let currentUsername = "";
+      let hasLoadedHistory = false;
 
       function formatTime(iso) {
         if (!iso) return "";
@@ -825,6 +826,11 @@
         joinDiv.style.display = "none";
         chatDiv.style.display = "flex";
         messageInput.focus();
+
+        if (!hasLoadedHistory) {
+          socket.emit("load history");
+          hasLoadedHistory = true;
+        }
       });
 
       messageForm.addEventListener("submit", (e) => {
@@ -850,6 +856,18 @@
           name: data?.name || "Без имени",
           text: data?.text || "",
           time: data?.time || "",
+        });
+      });
+
+      socket.on("chat history", (messages) => {
+        const list = Array.isArray(messages) ? messages : [];
+        messagesDiv.innerHTML = "";
+        list.forEach((msg) => {
+          appendChatMessage({
+            name: msg?.name || "Без имени",
+            text: msg?.text || "",
+            time: msg?.time || "",
+          });
         });
       });
 

@@ -2,6 +2,7 @@ const path = require("path");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const { supabase } = require("./supabase");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,6 +29,60 @@ function emitOnlineUsers() {
   io.emit("users online", buildOnlineUsers());
 }
 
+async function upsertUser(username) {
+  const { data, error } = await supabase
+    .from("users")
+    .upsert({ username }, { onConflict: "username" })
+    .select("id, username")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+async function saveMessageToDb(username, text) {
+  const user = await upsertUser(username);
+
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({
+      user_id: user.id,
+      text,
+    })
+    .select("id, created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+async function loadRecentMessages(limit = 50) {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, text, created_at, users(username)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  // Возвращаем в хронологическом порядке (старые -> новые)
+  return (data || [])
+    .reverse()
+    .map((row) => ({
+      name: row.users?.username || "Без имени",
+      text: row.text,
+      time: row.created_at,
+    }));
+}
+
 io.on("connection", (socket) => {
   console.log("Пользователь подключился:", socket.id);
 
@@ -42,6 +97,11 @@ io.on("connection", (socket) => {
 
     emitOnlineUsers();
 
+    // Пытаемся сохранить/обновить пользователя в БД
+    upsertUser(finalName).catch((err) => {
+      console.error("Ошибка upsert users:", err.message);
+    });
+
     // Можем показать системное сообщение всем
     io.emit("chat system", {
       text: `${finalName} подключился`,
@@ -49,16 +109,35 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("chat message", (data) => {
+  socket.on("chat message", async (data) => {
     const name = users.get(socket.id) || "Без имени";
     const text = String(data?.text || "").trim();
     if (!text) return;
 
+    let time = new Date().toISOString();
+    try {
+      const saved = await saveMessageToDb(name, text);
+      time = saved.created_at;
+    } catch (err) {
+      // Если БД недоступна, чат всё равно работает в реальном времени
+      console.error("Ошибка сохранения сообщения:", err.message);
+    }
+
     io.emit("chat message", {
       name,
       text,
-      time: new Date().toISOString(),
+      time,
     });
+  });
+
+  socket.on("load history", async () => {
+    try {
+      const messages = await loadRecentMessages(50);
+      socket.emit("chat history", messages);
+    } catch (err) {
+      console.error("Ошибка загрузки истории:", err.message);
+      socket.emit("chat history", []);
+    }
   });
 
   socket.on("disconnect", () => {
