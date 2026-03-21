@@ -97,14 +97,6 @@
     </style>
   </head>
   <body>
-    <script>
-      window.SONDERM_CONFIG = {
-        supabaseUrl: "https://hfazogfvoubqykkcvev.supabase.co",
-        supabaseAnonKey:
-          "sb_publishable_-ShNpEv7e14e2df7T3un6g_L_5JPrGo",
-      };
-    </script>
-
     <main class="card">
       <h1>Sonderm</h1>
       <p class="subtitle" id="modeSubtitle">Вход в аккаунт</p>
@@ -129,7 +121,7 @@
 
         <div id="blockRegister" class="hidden">
           <div class="row">
-            <label for="displayName">Имя (как в Telegram)</label>
+            <label for="displayName">Имя</label>
             <input id="displayName" type="text" placeholder="Например: Абду" maxlength="80" />
             <p class="hint">Видимое имя, может повторяться у разных людей.</p>
           </div>
@@ -460,10 +452,6 @@
         });
 
         async function boot() {
-          if (!window.SONDERM_CONFIG?.supabaseUrl || !window.SONDERM_CONFIG?.supabaseAnonKey) {
-            showError("Не заданы Supabase URL / anon key.");
-            return;
-          }
           const { data, error } = await window.authClient.getSession();
           if (error) {
             showError(error.message);

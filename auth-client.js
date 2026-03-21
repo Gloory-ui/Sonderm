@@ -1,15 +1,9 @@
 (() => {
-  const config = window.SONDERM_CONFIG || {};
-  const supabaseUrl = config.supabaseUrl;
-  const supabaseAnonKey = config.supabaseAnonKey;
+  /** Публичные ключи (anon) — безопасно в браузере. Service role только на сервере. */
+  const SUPABASE_URL = "https://hfazogfvoubqykkcvev.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_-ShNpEv7e14e2df7T3un6g_L_5JPrGo";
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error(
-      "SONDERM_CONFIG не задан: нужны supabaseUrl и supabaseAnonKey (встроены в login/index или /auth-config.js)."
-    );
-  }
-
-  const supabase = window.supabase.createClient(supabaseUrl || "", supabaseAnonKey || "");
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   function syntheticEmailFromUsername(username) {
     const u = String(username || "")

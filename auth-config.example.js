@@ -1,6 +1,3 @@
-// Не используйте этот файл в проде. Конфиг для браузера отдаётся с сервера:
-// GET /auth-config.js (берёт SUPABASE_URL и SUPABASE_ANON_KEY из .env)
-window.SONDERM_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: "",
-};
+// Конфиг для браузера зашит в auth-client.js (SUPABASE_URL, SUPABASE_ANON_KEY).
+// Маршрут GET /auth-config.js на сервере опционален (для переопределения через .env).
+// Service role никогда не добавлять сюда.
