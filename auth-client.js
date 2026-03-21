@@ -1,7 +1,7 @@
 (() => {
   /** Публичные ключи (anon) — безопасно в браузере. Service role только на сервере. */
   const SUPABASE_URL = "https://hfazogfvoubqykkcvev.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_-ShNpEv7e14e2df7T3un6g_L_5JPrGo";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXpvZ2Z2b3VicXlra2tjdmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTE2NTcsImV4cCI6MjA4OTUyNzY1N30.DI6zrntPZ67sz7_eh0i0Pr9Ok9B-OEPe5k0xSBsUXCM";
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
