@@ -6,152 +6,116 @@ const { supabase } = require("./supabase");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
 
-// socket.id -> имя пользователя
-const users = new Map();
+app.use(express.json());
+app.use(express.static(__dirname));
 
-// Отдаём страницу чата
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "login.html"));
+});
+
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
 });
 
 const PORT = process.env.PORT || 3000;
 
-function buildOnlineUsers() {
-  return Array.from(users.entries()).map(([id, name]) => ({
-    id,
-    name,
-  }));
+async function verifySupabaseToken(accessToken) {
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  if (error) throw new Error(error.message);
+  if (!data?.user) throw new Error("Пользователь не найден");
+  return data.user;
 }
 
-function emitOnlineUsers() {
-  io.emit("users online", buildOnlineUsers());
-}
+async function upsertProfileFromAuthUser(user) {
+  const username =
+    user.user_metadata?.username ||
+    (user.email ? user.email.split("@")[0] : `user_${user.id.slice(0, 8)}`);
 
-async function upsertUser(username) {
   const { data, error } = await supabase
-    .from("users")
-    .upsert({ username }, { onConflict: "username" })
-    .select("id, username")
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        email: user.email,
+        username,
+      },
+      { onConflict: "id" }
+    )
+    .select("id, email, username")
     .single();
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 }
 
-async function saveMessageToDb(username, text) {
-  const user = await upsertUser(username);
+io.use(async (socket, next) => {
+  try {
+    const tokenFromAuth = socket.handshake.auth?.accessToken;
+    const header = socket.handshake.headers.authorization || "";
+    const tokenFromHeader = header.startsWith("Bearer ")
+      ? header.slice("Bearer ".length)
+      : null;
+    const accessToken = tokenFromAuth || tokenFromHeader;
 
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({
-      user_id: user.id,
-      text,
-    })
-    .select("id, created_at")
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-async function loadRecentMessages(limit = 50) {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("id, text, created_at, users(username)")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw error;
-  }
-
-  // Возвращаем в хронологическом порядке (старые -> новые)
-  return (data || [])
-    .reverse()
-    .map((row) => ({
-      name: row.users?.username || "Без имени",
-      text: row.text,
-      time: row.created_at,
-    }));
-}
-
-io.on("connection", (socket) => {
-  console.log("Пользователь подключился:", socket.id);
-
-  // Сразу считаем как "Без имени", пока пользователь не введёт имя
-  users.set(socket.id, "Без имени");
-  emitOnlineUsers();
-
-  socket.on("set username", (name) => {
-    const cleanName = String(name || "").trim();
-    const finalName = cleanName || "Без имени";
-    users.set(socket.id, finalName);
-
-    emitOnlineUsers();
-
-    // Пытаемся сохранить/обновить пользователя в БД
-    upsertUser(finalName).catch((err) => {
-      console.error("Ошибка upsert users:", err.message);
-    });
-
-    // Можем показать системное сообщение всем
-    io.emit("chat system", {
-      text: `${finalName} подключился`,
-      time: new Date().toISOString(),
-    });
-  });
-
-  socket.on("chat message", async (data) => {
-    const name = users.get(socket.id) || "Без имени";
-    const text = String(data?.text || "").trim();
-    if (!text) return;
-
-    let time = new Date().toISOString();
-    try {
-      const saved = await saveMessageToDb(name, text);
-      time = saved.created_at;
-    } catch (err) {
-      // Если БД недоступна, чат всё равно работает в реальном времени
-      console.error("Ошибка сохранения сообщения:", err.message);
+    if (!accessToken) {
+      return next(new Error("UNAUTHORIZED: token required"));
     }
 
-    io.emit("chat message", {
-      name,
-      text,
-      time,
-    });
+    const user = await verifySupabaseToken(accessToken);
+    const profile = await upsertProfileFromAuthUser(user);
+    socket.user = user;
+    socket.profile = profile;
+    return next();
+  } catch (error) {
+    return next(new Error(`UNAUTHORIZED: ${error.message}`));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(
+    `Socket connected: ${socket.id}, user=${socket.user.id}, username=${socket.profile.username}`
+  );
+
+  socket.emit("auth:ready", {
+    user: {
+      id: socket.user.id,
+      email: socket.user.email,
+    },
+    profile: socket.profile,
   });
 
-  socket.on("load history", async () => {
+  socket.on("profile:update", async (payload = {}) => {
+    const username = String(payload.username || "").trim();
+    if (!username) {
+      socket.emit("profile:error", { message: "username обязателен" });
+      return;
+    }
+
     try {
-      const messages = await loadRecentMessages(50);
-      socket.emit("chat history", messages);
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ username })
+        .eq("id", socket.user.id)
+        .select("id, email, username")
+        .single();
+
+      if (error) throw error;
+
+      socket.profile = data;
+      socket.emit("profile:updated", data);
     } catch (err) {
-      console.error("Ошибка загрузки истории:", err.message);
-      socket.emit("chat history", []);
+      socket.emit("profile:error", { message: err.message });
     }
   });
 
   socket.on("disconnect", () => {
-    const name = users.get(socket.id);
-    if (name) {
-      io.emit("chat system", {
-        text: `${name} отключился`,
-        time: new Date().toISOString(),
-      });
-    }
-    users.delete(socket.id);
-    console.log("Пользователь отключился:", socket.id);
-
-    emitOnlineUsers();
+    console.log(`Socket disconnected: ${socket.id}, user=${socket.user?.id}`);
   });
 });
 

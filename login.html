@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sonderm - Вход</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .card {
+        width: 100%;
+        max-width: 420px;
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 24px;
+      }
+      h1 { margin: 0 0 8px; font-size: 24px; }
+      .subtitle { margin: 0 0 20px; color: #94a3b8; font-size: 14px; }
+      .row { margin-bottom: 14px; }
+      label { display: block; margin-bottom: 6px; font-size: 14px; }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        background: #0b1220;
+        color: #e2e8f0;
+      }
+      button {
+        width: 100%;
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 14px;
+        color: #ffffff;
+        font-weight: 700;
+        cursor: pointer;
+        background: #2563eb;
+      }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .switch {
+        margin-top: 16px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .switch a { color: #60a5fa; text-decoration: none; }
+      .msg {
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: none;
+        font-size: 14px;
+      }
+      .error { background: #3a1111; color: #fecaca; }
+      .ok { background: #052e16; color: #bbf7d0; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Sonderm</h1>
+      <p class="subtitle">Вход и регистрация</p>
+
+      <div id="errorBox" class="msg error"></div>
+      <div id="okBox" class="msg ok"></div>
+
+      <form id="authForm">
+        <div class="row">
+          <label for="username">Username</label>
+          <input id="username" placeholder="например: abdul_dev" />
+        </div>
+        <div class="row">
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+        </div>
+        <div class="row">
+          <label for="password">Пароль</label>
+          <input id="password" type="password" minlength="6" required />
+        </div>
+        <button id="submitBtn" type="submit">Войти</button>
+      </form>
+
+      <div class="switch">
+        <span id="switchText">Нет аккаунта?</span>
+        <a href="#" id="switchLink">Зарегистрироваться</a>
+      </div>
+    </main>
+
+    <script src="/auth-config.js"></script>
+    <script src="/auth-client.js"></script>
+    <script>
+      const form = document.getElementById("authForm");
+      const submitBtn = document.getElementById("submitBtn");
+      const switchText = document.getElementById("switchText");
+      const switchLink = document.getElementById("switchLink");
+      const usernameInput = document.getElementById("username");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const errorBox = document.getElementById("errorBox");
+      const okBox = document.getElementById("okBox");
+
+      let isLoginMode = true;
+
+      function hideMessages() {
+        errorBox.style.display = "none";
+        okBox.style.display = "none";
+      }
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.style.display = "block";
+        okBox.style.display = "none";
+      }
+
+      function showSuccess(message) {
+        okBox.textContent = message;
+        okBox.style.display = "block";
+        errorBox.style.display = "none";
+      }
+
+      function updateModeUi() {
+        submitBtn.textContent = isLoginMode ? "Войти" : "Зарегистрироваться";
+        switchText.textContent = isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?";
+        switchLink.textContent = isLoginMode ? "Зарегистрироваться" : "Войти";
+        usernameInput.required = !isLoginMode;
+      }
+
+      switchLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        isLoginMode = !isLoginMode;
+        hideMessages();
+        updateModeUi();
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        hideMessages();
+        submitBtn.disabled = true;
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const username = usernameInput.value.trim();
+
+        try {
+          if (isLoginMode) {
+            const { error } = await window.authClient.signIn(email, password);
+            if (error) throw error;
+
+            showSuccess("Вход выполнен. Переходим в чат...");
+            setTimeout(() => {
+              window.location.href = "/index.html";
+            }, 800);
+          } else {
+            if (!username) {
+              throw new Error("Введите username для регистрации.");
+            }
+
+            const { error } = await window.authClient.signUp(email, password, username);
+            if (error) throw error;
+
+            showSuccess("Аккаунт создан. Теперь войдите.");
+            isLoginMode = true;
+            updateModeUi();
+            passwordInput.value = "";
+          }
+        } catch (error) {
+          showError(error.message || "Ошибка авторизации.");
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      async function boot() {
+        const { data, error } = await window.authClient.getSession();
+        if (error) {
+          showError(error.message);
+          return;
+        }
+        if (data.session) {
+          window.location.href = "/index.html";
+        }
+      }
+
+      updateModeUi();
+      boot();
+    </script>
+  </body>
+</html>

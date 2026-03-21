@@ -9,6 +9,7 @@ yarn-error.log*
 # Runtime / env
 .env
 .env.*
+auth-config.js
 
 # Build output (if any)
 dist/
