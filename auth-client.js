@@ -5,24 +5,75 @@
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error(
-      "SONDERM_CONFIG не задан. Создайте window.SONDERM_CONFIG с supabaseUrl и supabaseAnonKey."
+      "SONDERM_CONFIG не задан: нужны supabaseUrl и supabaseAnonKey (встроены в login/index или /auth-config.js)."
     );
   }
 
   const supabase = window.supabase.createClient(supabaseUrl || "", supabaseAnonKey || "");
 
-  async function signUp(email, password, username) {
+  function syntheticEmailFromUsername(username) {
+    const u = String(username || "")
+      .trim()
+      .replace(/^@/, "")
+      .toLowerCase();
+    return `${u}@sonderm.app`;
+  }
+
+  /**
+   * Регистрация: email опционален; если нет — логин через username@sonderm.app
+   */
+  async function signUp({ password, username, displayName, recoveryEmail }) {
+    const u = String(username || "")
+      .trim()
+      .replace(/^@/, "")
+      .toLowerCase();
+    const emailRaw = String(recoveryEmail || "").trim();
+    const authEmail = emailRaw ? emailRaw.toLowerCase() : syntheticEmailFromUsername(u);
     return supabase.auth.signUp({
-      email,
+      email: authEmail,
       password,
       options: {
-        data: { username },
+        data: {
+          username: u,
+          display_name: String(displayName || "").trim() || u,
+        },
+        emailRedirectTo: `${window.location.origin}/index.html`,
       },
     });
   }
 
-  async function signIn(email, password) {
-    return supabase.auth.signInWithPassword({ email, password });
+  /**
+   * Вход: email или username (username → запрос на сервер за реальным email в auth)
+   */
+  async function signIn(identifier, password) {
+    let email = String(identifier || "").trim();
+    if (!email) {
+      return { data: null, error: new Error("Введите логин или email") };
+    }
+    if (!email.includes("@")) {
+      try {
+        const r = await fetch(`${window.location.origin}/api/auth/resolve-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: email.replace(/^@/, "") }),
+        });
+        const j = await r.json();
+        if (!j.email) {
+          return { data: null, error: new Error("Пользователь не найден") };
+        }
+        email = j.email;
+      } catch (e) {
+        return {
+          data: null,
+          error: new Error(
+            e.message?.includes("fetch") || e.name === "TypeError"
+              ? "Нет связи с сервером. Запустите приложение через тот же сайт (например Render) или проверьте сеть."
+              : e.message
+          ),
+        };
+      }
+    }
+    return supabase.auth.signInWithPassword({ email: email.toLowerCase(), password });
   }
 
   async function signOut() {
@@ -60,5 +111,6 @@
     getSession,
     getAccessToken,
     connectAuthenticatedSocket,
+    syntheticEmailFromUsername,
   };
 })();

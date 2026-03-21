@@ -34,6 +34,45 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+/** Вход по @username: найти email в auth (только сервер, service role) */
+app.post("/api/auth/resolve-email", async (req, res) => {
+  try {
+    const raw = String(req.body?.identifier || "").trim();
+    if (!raw) return res.status(400).json({ error: "empty" });
+    if (raw.includes("@")) {
+      return res.json({ email: raw.toLowerCase() });
+    }
+    const uname = raw.replace(/^@/, "").toLowerCase();
+    if (!/^[a-z0-9_]+$/.test(uname)) {
+      return res.json({ email: null });
+    }
+    const { data: prof, error } = await supabase.from("profiles").select("id").eq("username", uname).maybeSingle();
+    if (error || !prof?.id) return res.json({ email: null });
+    const { data: authData, error: e2 } = await supabase.auth.admin.getUserById(prof.id);
+    if (e2 || !authData?.user?.email) return res.json({ email: null });
+    return res.json({ email: authData.user.email });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Проверка свободен ли username (до регистрации) */
+app.post("/api/auth/check-username", async (req, res) => {
+  try {
+    let uname = String(req.body?.username || "")
+      .trim()
+      .replace(/^@/, "")
+      .toLowerCase();
+    if (!uname || !/^[a-z0-9_]{3,32}$/.test(uname)) {
+      return res.json({ available: false, reason: "format" });
+    }
+    const { data } = await supabase.from("profiles").select("id").eq("username", uname).maybeSingle();
+    return res.json({ available: !data, reason: data ? "taken" : null });
+  } catch (e) {
+    res.status(500).json({ available: false, error: e.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 /** Активные WebRTC-звонки */
@@ -60,6 +99,7 @@ async function upsertProfileFromAuthUser(user) {
     id: user.id,
     username,
     display_name: displayName,
+    email: user.email || null,
   };
 
   const { data, error } = await supabase
