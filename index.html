@@ -1,245 +1,126 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#17212b" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sonderm</title>
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="/telegram.css" />
-  </head>
-  <body>
-    <div id="appRoot" class="tg-app hide-chat-mobile">
-      <aside class="tg-panel tg-chats-panel" id="chatsPanel">
-        <header class="tg-header">
-          <button type="button" class="tg-icon-btn" id="btnMenuChats" title="Меню">☰</button>
-          <div class="tg-header-title">
-            <h2 id="chatsScreenTitle">Чаты</h2>
-            <p class="sub" id="chatsScreenSub"></p>
-          </div>
-          <button type="button" class="tg-icon-btn" id="btnNewFolder" title="Новая папка">+</button>
-        </header>
+    <link rel="stylesheet" href="/telegram.css">
+</head>
+<body>
+    <div id="app" class="app">
+        <!-- Левая панель -->
+        <aside class="chats-panel" id="chatsPanel">
+            <!-- Хедер -->
+            <header class="header">
+                <button class="icon-btn" id="menuBtn">☰</button>
+                <div class="header-title">
+                    <div id="headerTitle">Чаты</div>
+                    <div class="header-subtitle" id="headerSubtitle"></div>
+                </div>
+                <button class="icon-btn" id="newChatBtn">✏️</button>
+            </header>
 
-        <div class="tg-desktop-nav" id="desktopNav" aria-label="Разделы (ПК)">
-          <button type="button" data-tab="chats" class="active">Чаты</button>
-          <button type="button" data-tab="contacts">Контакты</button>
-          <button type="button" data-tab="settings">Настройки</button>
-          <button type="button" data-tab="profile">Профиль</button>
-        </div>
+            <!-- Навигация -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="chats">Чаты</button>
+                <button class="nav-tab" data-tab="contacts">Контакты</button>
+                <button class="nav-tab" data-tab="settings">Настройки</button>
+                <button class="nav-tab" data-tab="profile">Профиль</button>
+            </nav>
 
-        <div id="screenChats" class="tg-screen visible" style="flex: 1; min-height: 0; display: flex; flex-direction: column">
-          <div class="tg-folder-tabs" id="folderTabs"></div>
-          <div class="tg-search">
-            <input type="search" id="chatSearch" placeholder="Поиск" autocomplete="off" />
-          </div>
-          <div class="tg-chat-list" id="chatList"></div>
-        </div>
+            <!-- Экран чатов -->
+            <div class="screen active" id="chatsScreen">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="chatSearch" placeholder="Поиск">
+                </div>
+                <div class="chat-list" id="chatList">
+                    <div class="empty-state">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">Нет чатов</div>
+                        <div class="empty-subtext">Начните общение с контактов</div>
+                    </div>
+                </div>
+            </div>
 
-        <div id="screenContacts" class="tg-screen" style="flex: 1; min-height: 0">
-          <div class="tg-search">
-            <input type="search" id="contactSearch" placeholder="Поиск контактов" autocomplete="off" />
-          </div>
-          <div class="tg-list-plain" id="contactList"></div>
-        </div>
+            <!-- Экран контактов -->
+            <div class="screen" id="contactsScreen">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="contactSearch" placeholder="Поиск пользователей">
+                </div>
+                <div class="chat-list" id="contactList">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-text">Поиск пользователей...</div>
+                        <div class="empty-subtext">Введите имя пользователя для поиска</div>
+                    </div>
+                </div>
+            </div>
 
-        <div id="screenSettings" class="tg-screen" style="flex: 1; min-height: 0; padding: 12px">
-          <p style="color: var(--tg-muted); font-size: 14px">Настройки</p>
-          <div class="tg-list-plain" id="settingsList"></div>
-        </div>
+            <!-- Экран настроек -->
+            <div class="screen" id="settingsScreen">
+                <div class="list-item" id="logoutBtn">
+                    <span>🚪 Выйти из аккаунта</span>
+                </div>
+                <div class="list-item">
+                    <span>🔔 Уведомления</span>
+                </div>
+                <div class="list-item">
+                    <span>🔒 Конфиденциальность</span>
+                </div>
+            </div>
 
-        <div id="screenProfile" class="tg-screen" style="flex: 1; min-height: 0; padding: 12px">
-          <p style="color: var(--tg-muted); font-size: 14px">Ваш профиль</p>
-          <div class="tg-list-plain" id="profileForm"></div>
-        </div>
-      </aside>
+            <!-- Экран профиля -->
+            <div class="screen" id="profileScreen">
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label class="form-label">Отображаемое имя</label>
+                        <input type="text" class="form-input" id="displayName" placeholder="Ваше имя">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="username" placeholder="@username">
+                    </div>
+                    <button class="btn-primary" id="saveProfileBtn">Сохранить</button>
+                </div>
+            </div>
+        </aside>
 
-      <section class="tg-chat-panel" id="chatPanel">
-        <header class="tg-header">
-          <button type="button" class="tg-icon-btn tg-mobile-only" id="btnBackChat" title="Назад">←</button>
-          <div class="tg-avatar sm" id="headerAvatar">?</div>
-          <div class="tg-header-title">
-            <h2 id="headerTitle">Выберите чат</h2>
-            <p class="sub" id="headerSub"></p>
-          </div>
-          <button type="button" class="tg-icon-btn" id="btnCall" title="Звонок">📞</button>
-          <button type="button" class="tg-icon-btn" id="btnChatMenu" title="Меню">⋮</button>
-        </header>
+        <!-- Правая панель - чат -->
+        <main class="chat-panel" id="chatPanel">
+            <div class="chat-header">
+                <button class="back-btn" id="backBtn">←</button>
+                <div class="avatar" id="chatAvatar">?</div>
+                <div class="header-title">
+                    <div id="chatName">Выберите чат</div>
+                    <div class="header-subtitle" id="chatStatus"></div>
+                </div>
+            </div>
 
-        <div class="tg-pinned-bar" id="pinnedBar">
-          <div class="tg-pinned-chips" id="pinnedChips"></div>
-          <button type="button" class="tg-icon-btn" id="btnPinnedClose">✕</button>
-        </div>
+            <div class="messages" id="messages">
+                <div class="empty-state">
+                    <div class="empty-icon">💬</div>
+                    <div class="empty-text">Выберите чат</div>
+                    <div class="empty-subtext">Начните общение</div>
+                </div>
+            </div>
 
-        <div class="tg-messages" id="messages"></div>
-
-        <div class="tg-compose-wrap">
-          <div class="tg-reply-bar" id="replyBar" style="display: none;">
-            <div style="flex: 1; min-width: 0" id="replyBarText"></div>
-            <button type="button" class="tg-icon-btn" id="btnReplyCancel">✕</button>
-          </div>
-          <div class="tg-compose">
-            <button type="button" class="tg-icon-btn" id="btnEmoji" title="Эмодзи">😊</button>
-            <button type="button" class="tg-icon-btn" id="btnAttach" title="Файл">📎</button>
-            <textarea id="composeInput" rows="1" placeholder="Сообщение"></textarea>
-            <button type="button" class="tg-icon-btn" id="btnVoice" title="Голос">🎤</button>
-            <button type="button" class="tg-send-btn" id="btnSend" title="Отправить">➤</button>
-          </div>
-          <input type="file" id="fileInput" class="tg-hidden" />
-        </div>
-      </section>
+            <div class="compose">
+                <textarea class="compose-input" id="messageInput" placeholder="Напишите сообщение..." rows="1"></textarea>
+                <div class="compose-actions">
+                    <button class="action-btn" id="attachBtn">📎</button>
+                    <button class="action-btn" id="emojiBtn">😊</button>
+                    <button class="action-btn send-btn" id="sendBtn">➤</button>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <nav class="tg-bottom-nav" id="bottomNav" aria-label="Нижнее меню">
-      <button type="button" data-tab="chats" class="active">
-        <span style="font-size: 18px">💬</span>
-        Чаты
-      </button>
-      <button type="button" data-tab="contacts">
-        <span style="font-size: 18px">👥</span>
-        Контакты
-      </button>
-      <button type="button" data-tab="settings">
-        <span style="font-size: 18px">⚙️</span>
-        Настройки
-      </button>
-      <button type="button" data-tab="profile">
-        <span style="font-size: 18px">👤</span>
-        Профиль
-      </button>
-    </nav>
-
-    <div class="tg-ctx-menu" id="ctxMenu">
-      <div class="tg-ctx-backdrop" id="ctxBackdrop"></div>
-      <div class="tg-ctx-body" id="ctxBody" style="left: 0; top: 0"></div>
-    </div>
-
-    <div class="tg-modal" id="modalForward">
-      <div class="tg-ctx-backdrop" data-close="modalForward"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head">Переслать в…</div>
-        <div class="tg-modal-body" id="forwardTargets"></div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalFolder">
-      <div class="tg-ctx-backdrop" data-close="modalFolder"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head">Новая папка</div>
-        <div class="tg-modal-body">
-          <p style="margin: 0 0 8px; font-size: 13px; color: var(--tg-muted)">Иконка</p>
-          <div id="folderIconPicker" class="tg-folder-icons"></div>
-          <input
-            id="folderNameInput"
-            type="text"
-            placeholder="Название папки"
-            style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--tg-panel-2); margin-top: 10px"
-          />
-          <button
-            type="button"
-            id="btnFolderCreate"
-            style="margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--tg-accent); color: #fff; font-weight: 700; cursor: pointer"
-          >
-            Создать
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalReaction">
-      <div class="tg-ctx-backdrop" data-close="modalReaction"></div>
-      <div class="tg-modal-card" style="width: min(320px, 90vw)">
-        <div class="tg-modal-head">Реакция</div>
-        <div class="tg-modal-body" id="reactionChoices" style="display: flex; gap: 10px; flex-wrap: wrap"></div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalFolderEdit">
-      <div class="tg-ctx-backdrop" data-close="modalFolderEdit"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head">Папка</div>
-        <div class="tg-modal-body">
-          <input id="folderEditName" type="text" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--tg-panel-2)" />
-          <div id="folderEditIconPicker" class="tg-folder-icons" style="margin-top: 10px"></div>
-          <button type="button" id="btnFolderSave" style="margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--tg-accent); color: #fff; font-weight: 700; cursor: pointer">Сохранить</button>
-          <button type="button" id="btnFolderDelete" style="margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--tg-danger, #c62828); color: #fff; font-weight: 700; cursor: pointer">Удалить папку</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalChatInfo">
-      <div class="tg-ctx-backdrop" data-close="modalChatInfo"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head" id="chatInfoTitle">Информация о чате</div>
-        <div class="tg-modal-body">
-          <p style="font-size: 13px; color: var(--tg-muted); margin: 0 0 8px">Участники</p>
-          <div id="chatInfoParticipants" class="tg-list-plain" style="max-height: 160px"></div>
-          <p style="font-size: 13px; color: var(--tg-muted); margin: 12px 0 8px">Добавить (поиск по username)</p>
-          <input id="addMemberSearch" type="search" placeholder="@username" style="width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--tg-panel-2)" />
-          <div id="addMemberResults" class="tg-list-plain" style="max-height: 140px; margin-top: 8px"></div>
-          <button type="button" id="btnAddMembers" style="margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--tg-accent); color: #fff; font-weight: 700; cursor: pointer">Добавить выбранных</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalCallType">
-      <div class="tg-ctx-backdrop" data-close="modalCallType"></div>
-      <div class="tg-modal-card" style="width: min(320px, 90vw)">
-        <div class="tg-modal-head">Звонок</div>
-        <div class="tg-modal-body" style="display: flex; gap: 10px; flex-direction: column">
-          <button type="button" id="btnCallAudio" style="padding: 12px; border: none; border-radius: 10px; background: var(--tg-panel-2); color: inherit; cursor: pointer">🎤 Аудиозвонок</button>
-          <button type="button" id="btnCallVideo" style="padding: 12px; border: none; border-radius: 10px; background: var(--tg-panel-2); color: inherit; cursor: pointer">📹 Видеозвонок</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalAddToFolder">
-      <div class="tg-ctx-backdrop" data-close="modalAddToFolder" aria-label="Закрыть"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head">В папку</div>
-        <div class="tg-modal-body" id="addToFolderList"></div>
-      </div>
-    </div>
-
-    <div id="callOverlay" class="tg-call-overlay tg-hidden" aria-live="polite">
-      <div class="tg-call-inner">
-        <p id="callLabel" style="margin: 0 0 8px; font-weight: 700"></p>
-        <p id="callSub" style="margin: 0 0 12px; color: var(--tg-muted); font-size: 14px"></p>
-        <video id="callRemoteVideo" class="tg-call-remote" playsinline autoplay></video>
-        <video id="callLocalVideo" class="tg-call-local" playsinline autoplay muted></video>
-        <div id="callTimer" style="text-align: center; margin: 10px 0; font-variant-numeric: tabular-nums">00:00</div>
-        <div class="tg-call-btns">
-          <button type="button" class="tg-call-btn ok" id="callAccept">Принять</button>
-          <button type="button" class="tg-call-btn danger" id="callReject">Отклонить</button>
-          <button type="button" class="tg-call-btn danger" id="callHangup">Завершить</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tg-modal" id="modalPickChats">
-      <div class="tg-ctx-backdrop" data-close="modalPickChats"></div>
-      <div class="tg-modal-card">
-        <div class="tg-modal-head" id="pickChatsTitle">Чаты в папке</div>
-        <div class="tg-modal-body" id="pickChatsBody"></div>
-        <div style="padding: 10px; border-top: 1px solid var(--tg-border)">
-          <button
-            type="button"
-            id="btnPickChatsSave"
-            style="width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--tg-accent); color: #fff; font-weight: 700; cursor: pointer"
-          >
-            Сохранить
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Скрытые элементы -->
+    <input type="file" id="fileInput" style="display: none;">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script src="/auth-client.js"></script>
-    <script src="/app-full.js"></script>
-  </body>
+    <script src="/app-new.js"></script>
+</body>
 </html>

@@ -1,91 +1,86 @@
-/* Sonderm - Улучшенная тема в стиле Telegram */
+/* Telegram 2026 - Современный дизайн */
 :root {
-  --tg-bg: #0e1621;
-  --tg-panel: #17212b;
-  --tg-panel-2: #242f3d;
-  --tg-panel-3: #2b5278;
-  --tg-border: #101922;
+  --tg-bg: #1b2329;
+  --tg-surface: #232e35;
+  --tg-surface-variant: #2a353c;
+  --tg-primary: #0088cc;
+  --tg-primary-variant: #0077b3;
+  --tg-secondary: #4a5568;
   --tg-text: #ffffff;
-  --tg-muted: #8b95a5;
-  --tg-accent: #0088cc;
-  --tg-accent-hover: #0077b3;
-  --tg-bubble-in: #182533;
-  --tg-bubble-out: #0088cc;
+  --tg-text-secondary: #8b95a5;
+  --tg-border: #2a353c;
+  --tg-message-out: #0088cc;
+  --tg-message-in: #2a353c;
   --tg-online: #4caf50;
   --tg-typing: #ffa726;
 }
 
-* { box-sizing: border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 html, body {
   height: 100%;
-  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: var(--tg-bg);
   color: var(--tg-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  overflow: hidden;
 }
 
-.tg-app {
+.app {
   display: flex;
   height: 100vh;
-  max-width: 1400px;
-  margin: 0 auto;
   background: var(--tg-bg);
 }
 
-.tg-panel {
-  background: var(--tg-panel);
+/* Левая панель - чаты */
+.chats-panel {
+  width: 100%;
+  max-width: 320px;
+  background: var(--tg-surface);
   border-right: 1px solid var(--tg-border);
   display: flex;
   flex-direction: column;
 }
 
-.tg-chats-panel {
-  width: 320px;
-  flex: 0 0 320px;
+@media (min-width: 768px) {
+  .chats-panel {
+    width: 320px;
+  }
 }
 
-.tg-chat-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--tg-bg);
-}
-
-.tg-header {
-  height: 58px;
-  padding: 0 16px;
+/* Хедер */
+.header {
+  height: 60px;
+  background: var(--tg-surface);
+  border-bottom: 1px solid var(--tg-border);
   display: flex;
   align-items: center;
+  padding: 0 16px;
   gap: 12px;
-  background: var(--tg-panel);
-  border-bottom: 1px solid var(--tg-border);
 }
 
-.tg-header-title {
+.header-title {
   flex: 1;
-  min-width: 0;
-}
-
-.tg-header-title h2 {
-  margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--tg-text);
 }
 
-.tg-header-title .sub {
-  margin: 2px 0 0;
+.header-subtitle {
   font-size: 13px;
-  color: var(--tg-muted);
+  color: var(--tg-text-secondary);
+  margin-top: 2px;
 }
 
-.tg-icon-btn {
+.icon-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   background: transparent;
-  color: var(--tg-muted);
+  border: none;
+  color: var(--tg-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -94,104 +89,72 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.tg-icon-btn:hover {
+.icon-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--tg-text);
 }
 
-.tg-desktop-nav {
-  display: none;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--tg-border);
-  background: var(--tg-panel);
-}
-
-@media (min-width: 768px) {
-  .tg-desktop-nav {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .tg-desktop-nav button {
-    flex: 1;
-    padding: 10px 16px;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--tg-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  
-  .tg-desktop-nav button.active {
-    background: var(--tg-accent);
-    color: white;
-  }
-}
-
-.tg-screen {
-  display: none;
-  flex: 1;
-  min-height: 0;
-  flex-direction: column;
-}
-
-.tg-screen.visible {
+/* Навигация */
+.nav-tabs {
   display: flex;
-}
-
-.tg-search {
-  padding: 12px 16px;
+  background: var(--tg-surface);
   border-bottom: 1px solid var(--tg-border);
-  background: var(--tg-panel);
-}
-
-.tg-search input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 24px;
-  background: var(--tg-panel-2);
-  color: var(--tg-text);
-  font-size: 15px;
-}
-
-.tg-search input::placeholder {
-  color: var(--tg-muted);
-}
-
-.tg-folder-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--tg-border);
-  background: var(--tg-panel);
 }
 
-.tg-folder-tab {
-  flex: 0 0 auto;
-  padding: 8px 16px;
-  border-radius: 20px;
-  background: var(--tg-panel-2);
-  color: var(--tg-muted);
-  font-size: 13px;
+.nav-tab {
+  flex: 1;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: var(--tg-text-secondary);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.tg-folder-tab.active {
-  background: var(--tg-accent);
-  color: white;
+.nav-tab.active {
+  color: var(--tg-primary);
+  border-bottom-color: var(--tg-primary);
 }
 
-.tg-chat-list, .tg-list-plain {
+.nav-tab:hover {
+  color: var(--tg-text);
+}
+
+/* Поиск */
+.search-container {
+  padding: 12px 16px;
+  background: var(--tg-surface);
+  border-bottom: 1px solid var(--tg-border);
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--tg-surface-variant);
+  border: none;
+  border-radius: 20px;
+  color: var(--tg-text);
+  font-size: 15px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--tg-text-secondary);
+}
+
+/* Список чатов */
+.chat-list {
   flex: 1;
   overflow-y: auto;
   background: var(--tg-bg);
 }
 
-.tg-chat-item {
+.chat-item {
   display: flex;
   align-items: center;
   padding: 12px 16px;
@@ -200,15 +163,19 @@ html, body {
   border-bottom: 1px solid var(--tg-border);
 }
 
-.tg-chat-item:hover {
+.chat-item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.tg-avatar {
+.chat-item.active {
+  background: rgba(0, 136, 204, 0.1);
+}
+
+.avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--tg-panel-3);
+  background: var(--tg-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,32 +183,39 @@ html, body {
   font-weight: 600;
   color: white;
   margin-right: 12px;
+  flex-shrink: 0;
 }
 
-.tg-avatar.sm {
+.avatar.sm {
   width: 36px;
   height: 36px;
   font-size: 14px;
 }
 
-.tg-chat-info {
+.chat-info {
   flex: 1;
   min-width: 0;
 }
 
-.tg-chat-name {
+.chat-name {
   font-size: 16px;
   font-weight: 500;
   color: var(--tg-text);
   margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tg-chat-last {
+.chat-last {
   font-size: 13px;
-  color: var(--tg-muted);
+  color: var(--tg-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tg-chat-meta {
+.chat-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -249,13 +223,13 @@ html, body {
   margin-left: 8px;
 }
 
-.tg-chat-time {
+.chat-time {
   font-size: 12px;
-  color: var(--tg-muted);
+  color: var(--tg-text-secondary);
 }
 
-.tg-chat-badge {
-  background: var(--tg-accent);
+.chat-badge {
+  background: var(--tg-primary);
   color: white;
   font-size: 11px;
   font-weight: 600;
@@ -265,153 +239,313 @@ html, body {
   text-align: center;
 }
 
-.tg-messages {
+/* Правая панель - чат */
+.chat-panel {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  background: var(--tg-bg);
+}
+
+@media (min-width: 768px) {
+  .chat-panel {
+    display: flex;
+  }
+}
+
+.chat-panel.mobile-visible {
+  display: flex;
+}
+
+.chat-header {
+  height: 60px;
+  background: var(--tg-surface);
+  border-bottom: 1px solid var(--tg-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.back-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--tg-text);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: -8px;
+}
+
+@media (max-width: 767px) {
+  .back-btn {
+    display: block;
+  }
+}
+
+/* Сообщения */
+.messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  background: var(--tg-bg);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.tg-message {
+.message {
   display: flex;
   max-width: 70%;
 }
 
-.tg-message.in {
+.message.in {
   align-self: flex-start;
 }
 
-.tg-message.out {
+.message.out {
   align-self: flex-end;
 }
 
-.tg-bubble {
+.bubble {
   padding: 10px 14px;
   border-radius: 18px;
   font-size: 15px;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
-.tg-message.in .tg-bubble {
-  background: var(--tg-bubble-in);
+.message.in .bubble {
+  background: var(--tg-message-in);
   color: var(--tg-text);
   border-bottom-left-radius: 4px;
 }
 
-.tg-message.out .tg-bubble {
-  background: var(--tg-bubble-out);
+.message.out .bubble {
+  background: var(--tg-message-out);
   color: white;
   border-bottom-right-radius: 4px;
 }
 
-.tg-compose-wrap {
-  background: var(--tg-panel);
+.message-time {
+  font-size: 11px;
+  color: var(--tg-text-secondary);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.message.out .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Панель ввода */
+.compose {
+  padding: 16px;
+  background: var(--tg-surface);
   border-top: 1px solid var(--tg-border);
-  padding: 12px 16px;
 }
 
-.tg-reply-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--tg-panel-2);
-  border-radius: 8px;
-  margin-bottom: 8px;
-  color: var(--tg-muted);
-  font-size: 13px;
-}
-
-.tg-compose {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.tg-compose textarea {
-  flex: 1;
-  min-height: 20px;
+.compose-input {
+  width: 100%;
+  min-height: 44px;
   max-height: 120px;
-  padding: 10px 14px;
-  border-radius: 20px;
-  background: var(--tg-panel-2);
+  padding: 12px 16px;
+  background: var(--tg-surface-variant);
+  border: none;
+  border-radius: 22px;
   color: var(--tg-text);
   font-size: 15px;
   resize: none;
+  outline: none;
+  font-family: inherit;
 }
 
-.tg-compose textarea::placeholder {
-  color: var(--tg-muted);
+.compose-input::placeholder {
+  color: var(--tg-text-secondary);
 }
 
-.tg-send-btn {
-  width: 40px;
-  height: 40px;
+.compose-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--tg-accent);
-  color: white;
+  background: transparent;
+  border: none;
+  color: var(--tg-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  transition: all 0.2s ease;
 }
 
-.tg-send-btn:hover {
-  background: var(--tg-accent-hover);
-}
-
-.tg-list-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  border-bottom: 1px solid var(--tg-border);
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--tg-text);
 }
 
-.tg-list-item:hover {
+.send-btn {
+  background: var(--tg-primary);
+  color: white;
+  margin-left: auto;
+}
+
+.send-btn:hover {
+  background: var(--tg-primary-variant);
+}
+
+/* Экраны */
+.screen {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Списки */
+.list-item {
+  padding: 12px 16px;
+  background: var(--tg-surface);
+  border-bottom: 1px solid var(--tg-border);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.list-item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.tg-pinned-bar {
-  display: none;
-  padding: 8px 16px;
-  background: var(--tg-panel);
-  border-bottom: 1px solid var(--tg-border);
-  align-items: center;
-  gap: 8px;
+/* Профиль */
+.profile-form {
+  padding: 16px;
+  background: var(--tg-surface);
 }
 
-.tg-pinned-chips {
-  flex: 1;
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
+.form-group {
+  margin-bottom: 16px;
 }
 
-.tg-hidden {
-  display: none !important;
-}
-
-.tg-mobile-only {
+.form-label {
   display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--tg-text-secondary);
+  font-weight: 500;
 }
 
-@media (min-width: 768px) {
-  .tg-mobile-only {
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--tg-surface-variant);
+  border: 1px solid var(--tg-border);
+  border-radius: 8px;
+  color: var(--tg-text);
+  font-size: 15px;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--tg-primary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--tg-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--tg-primary-variant);
+}
+
+/* Пустые состояния */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--tg-text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 767px) {
+  .chats-panel.mobile-hidden {
     display: none;
   }
   
-  .tg-app.hide-chat-mobile .tg-chat-panel {
+  .chat-panel:not(.mobile-visible) {
+    display: none;
+  }
+  
+  .chat-panel.mobile-visible {
     display: flex;
   }
 }
 
-@media (max-width: 767px) {
-  .tg-app.hide-chat-mobile .tg-chat-panel {
-    display: none;
-  }
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tg-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tg-text-secondary);
 }

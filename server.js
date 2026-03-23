@@ -52,6 +52,168 @@ app.post("/api/auth/resend-confirmation", async (req, res) => {
   }
 });
 
+/** Получение профиля пользователя */
+app.get("/api/profile", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      return res.status(500).json({ error: error.message });
+    }
+    
+    // Если профиля нет, создаем
+    if (!profile) {
+      const { data: newProfile, error: createError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          username: user.email?.split('@')[0],
+          display_name: user.user_metadata?.name || 'Пользователь'
+        })
+        .select()
+        .single();
+      
+      if (createError) return res.status(500).json({ error: createError.message });
+      
+      return res.json({ profile: { ...newProfile, email: user.email } });
+    }
+    
+    res.json({ profile: { ...profile, email: user.email } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Обновление профиля */
+app.put("/api/profile", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer '', '');
+    const { display_name, username } = req.body;
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .update({
+        display_name: display_name?.trim(),
+        username: username?.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id)
+      .select()
+      .single();
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    res.json({ profile });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Получение сообщений чата */
+app.get("/api/messages/:chatId", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const { chatId } = req.params;
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    // Проверяем что пользователь участник чата
+    const { data: participant, error: participantError } = await supabase
+      .from("chat_participants")
+      .select("*")
+      .eq("chat_id", chatId)
+      .eq("user_id", user.id)
+      .single();
+    
+    if (participantError || !participant) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { data: messages, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("chat_id", chatId)
+      .order("created_at", { ascending: true });
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    res.json({ messages: messages || [] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Отправка сообщения */
+app.post("/api/messages/send", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const { chat_id, content } = req.body;
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    if (!chat_id || !content) return res.status(400).json({ error: "Missing data" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    // Проверяем что пользователь участник чата
+    const { data: participant, error: participantError } = await supabase
+      .from("chat_participants")
+      .select("*")
+      .eq("chat_id", chat_id)
+      .eq("user_id", user.id)
+      .single();
+    
+    if (participantError || !participant) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { data: message, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        chat_id,
+        sender_id: user.id,
+        content: content.trim(),
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    // Обновляем время чата
+    await supabase
+      .from("chats")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", chat_id);
+    
+    // Отправляем через сокет
+    io.emit(`chat:${chat_id}:message`, message);
+    
+    res.json({ message });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /** Получение чатов пользователя */
 app.get("/api/chats", async (req, res) => {
   try {
