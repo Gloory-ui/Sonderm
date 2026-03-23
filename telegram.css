@@ -313,6 +313,18 @@ html, body {
   padding: 12px 16px;
 }
 
+.tg-reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--tg-panel-2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: var(--tg-muted);
+  font-size: 13px;
+}
+
 .tg-compose {
   display: flex;
   align-items: flex-end;
@@ -350,6 +362,34 @@ html, body {
 
 .tg-send-btn:hover {
   background: var(--tg-accent-hover);
+}
+
+.tg-list-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid var(--tg-border);
+  color: var(--tg-text);
+}
+
+.tg-list-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tg-pinned-bar {
+  display: none;
+  padding: 8px 16px;
+  background: var(--tg-panel);
+  border-bottom: 1px solid var(--tg-border);
+  align-items: center;
+  gap: 8px;
+}
+
+.tg-pinned-chips {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
 }
 
 .tg-hidden {

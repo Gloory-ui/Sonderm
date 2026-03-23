@@ -52,6 +52,109 @@ app.post("/api/auth/resend-confirmation", async (req, res) => {
   }
 });
 
+/** Получение чатов пользователя */
+app.get("/api/chats", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    // Получаем чаты где пользователь участник
+    const { data: chats, error } = await supabase
+      .from("chat_participants")
+      .select(`
+        chat_id,
+        chats!inner(
+          id,
+          type,
+          created_at,
+          updated_at,
+          chat_messages(
+            content,
+            created_at,
+            sender_id
+          )
+        )
+      `)
+      .eq("user_id", user.id);
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    // Форматируем данные
+    const formattedChats = await Promise.all((chats || []).map(async (participant) => {
+      const chat = participant.chats;
+      const lastMessage = chat.chat_messages?.[0] || null;
+      
+      // Получаем информацию о чате
+      let chatName = "Новый чat";
+      if (chat.type === "private") {
+        // Для приватных чатов получаем имя другого участника
+        const { data: otherParticipants } = await supabase
+          .from("chat_participants")
+          .select("user_id, profiles!inner(display_name, username)")
+          .eq("chat_id", chat.id)
+          .neq("user_id", user.id)
+          .limit(1);
+        
+        if (otherParticipants?.[0]) {
+          chatName = otherParticipants[0].profiles.display_name || otherParticipants[0].profiles.username;
+        }
+      }
+      
+      // Считаем непрочитанные
+      const { count } = await supabase
+        .from("chat_messages")
+        .select("*", { count: "exact" })
+        .eq("chat_id", chat.id)
+        .neq("sender_id", user.id)
+        .is("read_at", null);
+      
+      return {
+        id: chat.id,
+        name: chatName,
+        type: chat.type,
+        updated_at: chat.updated_at,
+        unread_count: count || 0,
+        last_message: lastMessage ? {
+          content: lastMessage.content,
+          created_at: lastMessage.created_at
+        } : null
+      };
+    }));
+    
+    res.json({ chats: formattedChats });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Получение папок пользователя */
+app.get("/api/folders", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    const { data: folders, error } = await supabase
+      .from("folders")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at");
+    
+    if (error) return res.status(500).json({ error: error.message });
+    
+    res.json({ folders: folders || [] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /** Поиск пользователей по username или display_name */
 app.post("/api/search/users", async (req, res) => {
   try {
