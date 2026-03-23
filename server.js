@@ -40,7 +40,11 @@ app.post("/api/auth/resolve-email", async (req, res) => {
     const raw = String(req.body?.identifier || "").trim();
     if (!raw) return res.status(400).json({ error: "empty" });
     if (raw.includes("@")) {
-      return res.json({ email: raw.toLowerCase() });
+      // Если это email, возвращаем как есть
+      if (raw.includes(".")) {
+        return res.json({ email: raw.toLowerCase() });
+      }
+      // Если это @username, обрабатываем как username
     }
     const uname = raw.replace(/^@/, "").toLowerCase();
     if (!/^[a-z0-9_]+$/.test(uname)) {

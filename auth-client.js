@@ -49,7 +49,7 @@
         const r = await fetch(`${window.location.origin}/api/auth/resolve-email`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: email.replace(/^@/, "") }),
+          body: JSON.stringify({ identifier: email }),
         });
         const j = await r.json();
         if (!j.email) {
