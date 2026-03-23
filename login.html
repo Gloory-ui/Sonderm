@@ -158,6 +158,10 @@
         </div>
 
         <button class="main" id="submitBtn" type="submit">Войти</button>
+        
+        <button type="button" id="resendBtn" class="hidden" style="width: 100%; border: 0; border-radius: 10px; padding: 8px; margin-top: 8px; background: #374151; color: #94a3b8; font-size: 13px;">
+          Отправить подтверждение повторно
+        </button>
       </form>
 
       <div class="switch">
@@ -227,6 +231,7 @@
 
         const form = $("authForm");
         const submitBtn = $("submitBtn");
+        const resendBtn = $("resendBtn");
         const switchText = $("switchText");
         const switchLink = $("switchLink");
         const errorBox = $("errorBox");
@@ -249,6 +254,8 @@
           errorBox.textContent = message;
           errorBox.style.display = "block";
           okBox.style.display = "none";
+          // Показываем кнопку повторной отправки если ошибка про неподтвержденный email
+          resendBtn.classList.toggle("hidden", !/email.*confirm/i.test(message));
         }
 
         function showSuccess(message) {
@@ -464,6 +471,39 @@
 
         updateModeUi();
         boot();
+        
+        // Обработчик для кнопки повторной отправки
+        resendBtn.addEventListener("click", async () => {
+          const email = $("loginId").value.trim();
+          if (!email) {
+            showError("Введите email для повторной отправки");
+            return;
+          }
+          
+          resendBtn.disabled = true;
+          resendBtn.textContent = "Отправка...";
+          
+          try {
+            const r = await fetch(`${window.location.origin}/api/auth/resend-confirmation`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const j = await r.json();
+            
+            if (j.success) {
+              showSuccess("Письмо подтверждения отправлено повторно");
+              resendBtn.classList.add("hidden");
+            } else {
+              showError(j.error || "Ошибка отправки");
+            }
+          } catch (e) {
+            showError("Не удалось отправить письмо");
+          } finally {
+            resendBtn.disabled = false;
+            resendBtn.textContent = "Отправить подтверждение повторно";
+          }
+        });
       })();
     </script>
   </body>

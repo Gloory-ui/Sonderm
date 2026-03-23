@@ -34,6 +34,24 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+/** Повторная отправка письма подтверждения */
+app.post("/api/auth/resend-confirmation", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "email required" });
+    
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.toLowerCase(),
+    });
+    
+    if (error) return res.status(400).json({ error: error.message });
+    return res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /** Вход по @username: найти email в auth (только сервер, service role) */
 app.post("/api/auth/resolve-email", async (req, res) => {
   try {
