@@ -75,23 +75,73 @@ const Auth = {
     },
 
     /**
-     * Зарегистрироваться
+     * Зарегистрироваться и создать профиль
      */
-    async signUp(email, password, userData = {}) {
+    async signUp(email, password, fullName, username = '') {
         try {
             const supabase = SupabaseClient.getClient();
+            
+            // Регистрируем пользователя
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: userData
+                    data: {
+                        full_name: fullName
+                    }
                 }
             });
             
             if (error) throw error;
+            if (!data.user) throw new Error('User creation failed');
+            
+            // Создаем профиль вручную (на случай если триггер не сработал)
+            await this.createProfile(data.user.id, {
+                id: data.user.id,
+                username: username || email.split('@')[0],
+                full_name: fullName || 'User',
+                email: email
+            });
             
             return { success: true, user: data.user };
         } catch (error) {
+            console.error('SignUp error:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Создать профиль пользователя в таблице profiles
+     */
+    async createProfile(userId, profileData) {
+        try {
+            const supabase = SupabaseClient.getClient();
+            
+            const { data, error } = await supabase
+                .from('profiles')
+                .insert({
+                    id: userId,
+                    username: profileData.username,
+                    full_name: profileData.full_name,
+                    avatar_url: null,
+                    bio: '',
+                    is_online: true,
+                    last_seen: new Date().toISOString()
+                })
+                .select()
+                .single();
+            
+            if (error) {
+                // Если запись уже существует (триггер создал), это нормально
+                if (error.code === '23505') {
+                    return { success: true };
+                }
+                throw error;
+            }
+            
+            return { success: true, profile: data };
+        } catch (error) {
+            console.error('Profile creation error:', error);
             return { success: false, error: error.message };
         }
     },

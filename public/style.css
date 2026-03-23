@@ -507,3 +507,247 @@ html, body {
     opacity: 1;
     visibility: visible;
 }
+
+/* ===== Экран авторизации (Telegram Login Style) ===== */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-primary);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+}
+
+.auth-overlay.hidden {
+    display: none;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 360px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Шапка авторизации */
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-logo {
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-logo svg {
+    filter: drop-shadow(0 4px 12px rgba(0, 136, 204, 0.3));
+}
+
+.auth-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    font-family: var(--font-family);
+}
+
+.auth-subtitle {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+/* Форма */
+.auth-form {
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-step {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.auth-step.hidden {
+    display: none;
+}
+
+/* Поля ввода (Telegram style) */
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+    display: block;
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-bottom: 2px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: border-color var(--transition-fast);
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.form-input:focus {
+    border-bottom-color: var(--tg-primary);
+}
+
+.form-error {
+    display: block;
+    font-size: 12px;
+    color: #e74c3c;
+    margin-top: var(--spacing-xs);
+    min-height: 16px;
+}
+
+/* Кнопка NEXT (Telegram style) */
+.auth-btn {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--tg-primary);
+    color: var(--text-light);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: var(--spacing-md);
+}
+
+.auth-btn:hover {
+    background: var(--tg-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+}
+
+.auth-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.auth-btn:disabled {
+    background: var(--tg-secondary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Переключатель Sign in/up */
+.auth-switch {
+    text-align: center;
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+.switch-btn {
+    background: none;
+    border: none;
+    color: var(--tg-primary);
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: var(--spacing-xs);
+    padding: 0;
+    transition: color var(--transition-fast);
+}
+
+.switch-btn:hover {
+    color: var(--tg-primary-dark);
+    text-decoration: underline;
+}
+
+/* Ошибка авторизации */
+.auth-error {
+    margin-top: var(--spacing-md);
+    padding: 12px 16px;
+    background: #fdf2f2;
+    border: 1px solid #fc8181;
+    border-radius: var(--radius-md);
+    color: #c53030;
+    font-size: var(--font-size-small);
+    text-align: center;
+    animation: shake 0.5s ease-in-out;
+    display: none;
+}
+
+.auth-error.visible {
+    display: block;
+}
+
+/* Загрузка */
+.auth-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.auth-loading.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--tg-primary);
+    border-radius: var(--radius-full);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Тёмная тема для auth */
+@media (prefers-color-scheme: dark) {
+    .auth-error {
+        background: rgba(231, 76, 60, 0.1);
+        border-color: rgba(231, 76, 60, 0.3);
+        color: #fc8181;
+    }
+}
+
+/* Мобильная адаптация auth */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: var(--spacing-md);
+    }
+    
+    .auth-title {
+        font-size: 20px;
+    }
+    
+    .form-input {
+        font-size: 16px; /* Предотвращает зум на iOS */
+    }
+}

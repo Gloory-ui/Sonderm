@@ -110,6 +110,111 @@
     <!-- Модальные окна -->
     <div class="modal-overlay" id="modalOverlay"></div>
 
+    <!-- Экран авторизации (Telegram Login Style) -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <!-- Логотип и заголовок -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <svg viewBox="0 0 240 240" width="80" height="80">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#37aee2"/>
+                                <stop offset="100%" style="stop-color:#0088cc"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="120" cy="120" r="120" fill="url(#logoGradient)"/>
+                        <path fill="#fff" d="M97.5 165.5c-9.3 2.4-15.3 4.6-18.2 5.5-2.9.9-4.9 1.4-6.1 1.4-1.2 0-2.2-.3-3-.8-.8-.5-1.5-1.2-2-2-.5-.8-.8-2-.8-3.5 0-1.5.1-3.1.4-4.8.3-1.7 1-4.5 2.2-8.4l17.8-53.5c1.3-4 2.4-7.4 3.2-10.1.8-2.7 1.7-5 2.6-7 .9-2 1.9-3.5 3-4.5 1.1-1 2.5-1.5 4.2-1.5 1.7 0 3.5.8 5.4 2.4 1.9 1.6 4.5 4.2 7.8 7.8 3.3 3.6 7.9 9.1 13.8 16.5l15.8 21.4c3.8-14.8 9.4-33.3 16.8-55.5 1.2-3.8 2.6-6.4 4.2-7.8 1.6-1.4 3.6-2.1 6-2.1 1.8 0 3.6.5 5.4 1.6 1.8 1.1 3.1 2.4 3.9 3.9.8 1.5 1.2 3.3 1.2 5.4 0 1.5-.1 2.9-.3 4.3-.2 1.4-.6 3.1-1.1 5.2l-15 48c-1.6 5.2-3 9.5-4.2 12.9-1.2 3.4-2.5 5.9-3.8 7.6-1.3 1.7-2.8 2.5-4.5 2.5-2.1 0-4.2-1.1-6.3-3.2-2.1-2.1-5.7-6.4-10.8-12.8l-20.8-27.8-10.4 15.4c-2.3 3.4-4.6 6.3-6.9 8.7-2.3 2.4-4.6 4.2-6.9 5.4-2.3 1.2-5.1 2.1-8.4 2.7z"/>
+                    </svg>
+                </div>
+                <h1 class="auth-title" id="authTitle">Sign in to Telegram</h1>
+                <p class="auth-subtitle" id="authSubtitle">Please enter your credentials to continue</p>
+            </div>
+
+            <!-- Форма -->
+            <form class="auth-form" id="authForm">
+                <div class="auth-step" id="stepPhone">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number or Email</label>
+                        <input 
+                            type="text" 
+                            class="form-input" 
+                            id="authIdentifier" 
+                            placeholder="Enter phone or email"
+                            autocomplete="email"
+                        >
+                        <span class="form-error" id="identifierError"></span>
+                    </div>
+                    <button type="button" class="auth-btn" id="btnNext">NEXT</button>
+                </div>
+
+                <div class="auth-step hidden" id="stepPassword">
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input 
+                            type="password" 
+                            class="form-input" 
+                            id="authPassword" 
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                        >
+                        <span class="form-error" id="passwordError"></span>
+                    </div>
+                    <button type="button" class="auth-btn" id="btnSignIn">SIGN IN</button>
+                </div>
+
+                <div class="auth-step hidden" id="stepRegister">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input 
+                            type="text" 
+                            class="form-input" 
+                            id="authFullName" 
+                            placeholder="Your full name"
+                        >
+                        <span class="form-error" id="fullNameError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            id="authEmail" 
+                            placeholder="your@email.com"
+                        >
+                        <span class="form-error" id="emailError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input 
+                            type="password" 
+                            class="form-input" 
+                            id="authRegPassword" 
+                            placeholder="Create password (min 6 chars)"
+                        >
+                        <span class="form-error" id="regPasswordError"></span>
+                    </div>
+                    <button type="button" class="auth-btn" id="btnSignUp">SIGN UP</button>
+                </div>
+            </form>
+
+            <!-- Переключатель -->
+            <div class="auth-switch">
+                <span id="switchText">Don't have an account?</span>
+                <button type="button" class="switch-btn" id="btnSwitch">Sign up</button>
+            </div>
+
+            <!-- Ошибка -->
+            <div class="auth-error" id="authError"></div>
+
+            <!-- Загрузка -->
+            <div class="auth-loading hidden" id="authLoading">
+                <div class="spinner"></div>
+                <span>Please wait...</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Скрипты -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/src/supabase.js"></script>
