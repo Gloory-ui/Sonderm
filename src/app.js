@@ -237,8 +237,13 @@ const App = {
         this.setLoading(false);
         
         if (result.success) {
-            // Успешно
+            // Успешно - обновляем UI напрямую (на случай если listener не сработал)
             errorEl.textContent = '';
+            Auth.user = result.user || await SupabaseClient.getCurrentUser();
+            Auth.isAuthenticated = true;
+            await Auth.loadProfile();
+            this.hideAuthOverlay();
+            this.initMainApp();
             UI.showNotification('Welcome back!');
         } else {
             // Ошибка
@@ -290,9 +295,18 @@ const App = {
         this.setLoading(false);
         
         if (result.success) {
-            // Успешно
+            // Успешно - обновляем UI напрямую
+            UI.$('fullNameError').textContent = '';
+            UI.$('emailError').textContent = '';
+            UI.$('regPasswordError').textContent = '';
+            
+            // Сразу входим после регистрации
+            Auth.user = result.user;
+            Auth.isAuthenticated = true;
+            await Auth.loadProfile();
+            this.hideAuthOverlay();
+            this.initMainApp();
             UI.showNotification('Account created successfully!');
-            // После регистрации сразу входим (Supabase может требовать подтверждение email)
         } else {
             // Ошибка
             this.showAuthError(result.error || 'Registration failed');
