@@ -78,23 +78,11 @@
         <div class="tg-messages" id="messages"></div>
 
         <div class="tg-compose-wrap">
-          <div class="tg-forward-bar" id="forwardBar">
-            <span id="forwardBarText"></span>
-            <button type="button" class="tg-icon-btn" id="btnForwardCancel">✕</button>
-          </div>
-          <div class="tg-reply-bar" id="replyBar">
-            <div style="flex: 1; min-width: 0" id="replyBarText"></div>
-            <button type="button" class="tg-icon-btn" id="btnReplyCancel">✕</button>
-          </div>
-          <div class="tg-emoji-panel" id="emojiPanel"></div>
-          <div class="tg-sticker-panel" id="stickerPanel"></div>
           <div class="tg-compose">
             <button type="button" class="tg-icon-btn" id="btnEmoji" title="Эмодзи">😊</button>
-            <button type="button" class="tg-icon-btn" id="btnSticker" title="Стикеры">🎨</button>
-            <textarea id="composeInput" rows="1" placeholder="Сообщение"></textarea>
             <button type="button" class="tg-icon-btn" id="btnAttach" title="Файл">📎</button>
-            <button type="button" class="tg-icon-btn" id="btnVoice" title="Голос">🎤</button>
-            <button type="button" class="tg-icon-btn tg-hidden" id="btnSend" title="Отправить">➤</button>
+            <textarea id="composeInput" rows="1" placeholder="Сообщение"></textarea>
+            <button type="button" class="tg-send-btn" id="btnSend" title="Отправить">➤</button>
           </div>
           <input type="file" id="fileInput" class="tg-hidden" />
         </div>
@@ -247,7 +235,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script src="/auth-client.js"></script>
-    <script src="/webrtc.js"></script>
-    <script src="/app.js"></script>
+    <script src="/app-simple.js"></script>
   </body>
 </html>

@@ -52,6 +52,72 @@ app.post("/api/auth/resend-confirmation", async (req, res) => {
   }
 });
 
+/** Поиск пользователей по username или display_name */
+app.post("/api/search/users", async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || query.length < 2) {
+      return res.json({ users: [] });
+    }
+    
+    const { data: users, error } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, updated_at")
+      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .limit(20);
+    
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ users: users || [] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** Создание чата между пользователями */
+app.post("/api/chats/create", async (req, res) => {
+  try {
+    const { participantId } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    
+    // Получаем текущего пользователя
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return res.status(401).json({ error: "Invalid token" });
+    
+    // Проверяем что не пытаемся создать чат с самим собой
+    if (participantId === user.id) {
+      return res.status(400).json({ error: "Cannot create chat with yourself" });
+    }
+    
+    // Создаем чат
+    const { data: chat, error: chatError } = await supabase
+      .from("chats")
+      .insert({
+        type: "private",
+        created_by: user.id
+      })
+      .select()
+      .single();
+    
+    if (chatError) return res.status(500).json({ error: chatError.message });
+    
+    // Добавляем участников
+    const { error: participantsError } = await supabase
+      .from("chat_participants")
+      .insert([
+        { chat_id: chat.id, user_id: user.id, role: "admin" },
+        { chat_id: chat.id, user_id: participantId, role: "member" }
+      ]);
+    
+    if (participantsError) return res.status(500).json({ error: participantsError.message });
+    
+    return res.json({ chat });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /** Вход по @username: найти email в auth (только сервер, service role) */
 app.post("/api/auth/resolve-email", async (req, res) => {
   try {
