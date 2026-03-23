@@ -1,90 +1,107 @@
-/* Telegram Ultimate - CSS Variables */
+/* Telegram Ultimate - Variables (100% Telegram Web Clone) */
+
 :root {
-    /* Цвета Telegram */
-    --tg-primary: #0088cc;
-    --tg-primary-dark: #006699;
-    --tg-primary-light: #33aadd;
-    
-    /* Фоны */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #eeeeee;
-    --bg-chat: #e5ddd5;
-    --bg-dark: #17212b;
-    --bg-dark-secondary: #242f3d;
-    --bg-dark-tertiary: #2b5278;
-    
-    /* Текст */
-    --text-primary: #000000;
-    --text-secondary: #707579;
-    --text-light: #ffffff;
-    --text-link: #0088cc;
-    
-    /* Границы */
-    --border-color: #e0e0e0;
-    --border-dark: #2b5278;
-    
-    /* Сообщения */
-    --message-out-bg: #dcf8c6;
-    --message-in-bg: #ffffff;
-    --message-out-dark: #2b5278;
-    --message-in-dark: #182533;
-    
-    /* Статусы */
-    --online: #4caf50;
-    --offline: #9e9e9e;
-    
-    /* Системные */
-    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-    --font-size-base: 16px;
-    --font-size-small: 14px;
-    --font-size-tiny: 12px;
-    
-    /* Отступы */
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    
-    /* Радиусы */
-    --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 22px;
-    --radius-full: 50%;
-    
-    /* Тени */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-    
-    /* Анимации */
-    --transition-fast: 0.15s ease;
-    --transition-normal: 0.25s ease;
-    --transition-slow: 0.4s ease;
-    
-    /* Размеры */
-    --sidebar-width: 360px;
-    --header-height: 60px;
-    --input-height: 60px;
-    --avatar-size: 54px;
-    --avatar-size-sm: 44px;
+  /* === System Font (Exact Telegram) === */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* === Light Theme Colors (Exact Telegram Web) === */
+  --tg-primary: #0088cc;
+  --tg-primary-hover: #0099e0;
+  --tg-primary-light: #40a7e3;
+  
+  /* Backgrounds */
+  --bg-primary: #e7ebf0;
+  --bg-sidebar: #ffffff;
+  --bg-message-in: #ffffff;
+  --bg-message-out: #effdde;
+  --bg-search: #f1f1f1;
+  --bg-hover: #f5f5f5;
+  --bg-active: #0088cc;
+  
+  /* Text */
+  --text-primary: #000000;
+  --text-secondary: #707579;
+  --text-light: #ffffff;
+  --text-online: #3fa2e0;
+  
+  /* Borders */
+  --border-color: #dfe1e5;
+  --border-light: #e9e9e9;
+  --input-border: #dfe1e5;
+  
+  /* Status Colors */
+  --unread-bg: #c4c9cc;
+  --unread-active-bg: #ffffff;
+  --unread-text: #ffffff;
+  --unread-active-text: #0088cc;
+  
+  /* === Layout Dimensions === */
+  --sidebar-width: 25%;
+  --sidebar-min-width: 320px;
+  --sidebar-max-width: 420px;
+  --header-height: 56px;
+  --compose-height: 64px;
+  --chat-item-height: 72px;
+  --avatar-size: 54px;
+  --avatar-size-sm: 44px;
+  
+  /* === Typography === */
+  --font-size-xs: 11px;
+  --font-size-small: 13px;
+  --font-size-base: 14px;
+  --font-size-medium: 15px;
+  --font-size-large: 16px;
+  --font-size-title: 20px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --line-height-base: 1.4;
+  
+  /* === Spacing === */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  
+  /* === Border Radius (max 12px as requested) === */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-full: 50%;
+  --radius-search: 22px;
+  
+  /* === Transitions === */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  
+  /* === Shadows (Minimal/None) === */
+  --shadow-none: none;
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Тёмная тема */
+/* === Dark Theme (Telegram) === */
 @media (prefers-color-scheme: dark) {
-    :root {
-        --bg-primary: #17212b;
-        --bg-secondary: #242f3d;
-        --bg-tertiary: #2b5278;
-        --bg-chat: #0e1621;
-        
-        --text-primary: #ffffff;
-        --text-secondary: #8b95a5;
-        
-        --border-color: #2b5278;
-        
-        --message-out-bg: #2b5278;
-        --message-in-bg: #182533;
-    }
+  :root {
+    --bg-primary: #0e1621;
+    --bg-sidebar: #17212b;
+    --bg-message-in: #182533;
+    --bg-message-out: #2b5278;
+    --bg-search: #242f3d;
+    --bg-hover: #202b36;
+    --bg-active: #2b5278;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #7d8b99;
+    --text-online: #3fa2e0;
+    
+    --border-color: #0e1621;
+    --border-light: #242f3d;
+    --input-border: #0e1621;
+    
+    --unread-bg: #3fa2e0;
+    --unread-text: #ffffff;
+  }
 }

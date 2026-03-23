@@ -1,64 +1,63 @@
-/* Telegram Ultimate - Main Application */
+/* Telegram Ultimate - Main Application (100% Telegram Clone) */
 
 const App = {
-    currentAuthStep: 'login', // 'login' | 'register'
+    currentAuthStep: 'login',
     isAuthVisible: true,
-    isAuthProcessing: false, // Защита от race condition
+    isAuthProcessing: false,
 
     /**
-     * Инициализация приложения
+     * Initialize the application
      */
     async init() {
-        // Подписываемся на изменения авторизации СНАЧАЛА
+        // Setup auth state listener FIRST
         this.setupAuthStateListener();
         
-        // Настраиваем UI авторизации
+        // Setup auth UI
         this.setupAuthUI();
         
-        // Проверяем авторизацию
+        // Check authentication
         await this.checkAuth();
     },
 
     /**
-     * Проверить авторизацию при загрузке
+     * Check authentication status on load
      */
     async checkAuth() {
         const { session, error } = await SupabaseClient.getSession();
         
         if (session && session.user) {
-            // Пользователь авторизован
+            // User is authenticated
             Auth.user = session.user;
             Auth.isAuthenticated = true;
             
-            // Загружаем профиль
+            // Load profile
             await Auth.loadProfile();
             
-            // Скрываем экран авторизации
+            // Hide auth overlay
             this.hideAuthOverlay();
             
-            // Инициализируем основной UI
+            // Initialize main app
             this.initMainApp();
             
             return true;
         } else {
-            // Пользователь не авторизован
+            // User is not authenticated
             this.showAuthOverlay();
             return false;
         }
     },
 
     /**
-     * Подписаться на изменения состояния авторизации
+     * Setup auth state change listener
      */
     setupAuthStateListener() {
         const supabase = SupabaseClient.getClient();
         
         supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('🔄 Auth state changed:', event, session?.user?.email);
+            console.log('Auth state changed:', event);
             
-            // Игнорируем если уже обрабатываем
+            // Skip if already processing
             if (this.isAuthProcessing) {
-                console.log('⏳ Auth processing, skipping...');
                 return;
             }
             
@@ -96,34 +95,34 @@ const App = {
     },
 
     /**
-     * Настроить UI авторизации
+     * Setup auth UI
      */
     setupAuthUI() {
-        // Кнопка "NEXT" для входа
+        // Next button
         const btnNext = UI.$('btnNext');
         if (btnNext) {
             btnNext.addEventListener('click', () => this.handleNextStep());
         }
 
-        // Кнопка "SIGN IN"
+        // Sign in button
         const btnSignIn = UI.$('btnSignIn');
         if (btnSignIn) {
             btnSignIn.addEventListener('click', () => this.handleSignIn());
         }
 
-        // Кнопка "SIGN UP"
+        // Sign up button
         const btnSignUp = UI.$('btnSignUp');
         if (btnSignUp) {
             btnSignUp.addEventListener('click', () => this.handleSignUp());
         }
 
-        // Кнопка переключения sign in/up
+        // Switch mode button
         const btnSwitch = UI.$('btnSwitch');
         if (btnSwitch) {
             btnSwitch.addEventListener('click', () => this.toggleAuthMode());
         }
 
-        // Enter в поле пароля
+        // Enter key in password field
         const authPassword = UI.$('authPassword');
         if (authPassword) {
             authPassword.addEventListener('keypress', (e) => {
@@ -133,7 +132,7 @@ const App = {
             });
         }
 
-        // Enter в полях регистрации
+        // Enter key in registration password
         const authRegPassword = UI.$('authRegPassword');
         if (authRegPassword) {
             authRegPassword.addEventListener('keypress', (e) => {
@@ -145,7 +144,7 @@ const App = {
     },
 
     /**
-     * Переключить режим вход/регистрация
+     * Toggle auth mode (login/register)
      */
     toggleAuthMode() {
         const stepPhone = UI.$('stepPhone');
@@ -157,14 +156,14 @@ const App = {
         const btnSwitch = UI.$('btnSwitch');
         const authError = UI.$('authError');
 
-        // Очищаем ошибки
+        // Clear errors
         if (authError) {
             authError.textContent = '';
             authError.classList.remove('visible');
         }
 
         if (this.currentAuthStep === 'login') {
-            // Переключаемся на регистрацию
+            // Switch to register
             this.currentAuthStep = 'register';
             
             UI.addClass(stepPhone, 'hidden');
@@ -176,7 +175,7 @@ const App = {
             switchText.textContent = 'Already have an account?';
             btnSwitch.textContent = 'Sign in';
         } else {
-            // Переключаемся на вход
+            // Switch to login
             this.currentAuthStep = 'login';
             
             UI.removeClass(stepPhone, 'hidden');
@@ -191,44 +190,44 @@ const App = {
     },
 
     /**
-     * Обработка кнопки NEXT (проверка email/телефона)
+     * Handle next step (email validation)
      */
     async handleNextStep() {
         const identifier = UI.$('authIdentifier').value.trim();
         const errorEl = UI.$('identifierError');
         
-        // Валидация
+        // Validation
         if (!identifier) {
             errorEl.textContent = 'Please enter email or phone';
             return;
         }
         
-        if (!identifier.includes('@') && identifier.length < 5) {
+        if (!identifier.includes('@')) {
             errorEl.textContent = 'Please enter valid email';
             return;
         }
         
         errorEl.textContent = '';
         
-        // Показываем поле пароля
+        // Show password step
         UI.addClass(UI.$('stepPhone'), 'hidden');
         UI.removeClass(UI.$('stepPassword'), 'hidden');
         
-        // Фокус на пароль
+        // Focus password
         setTimeout(() => {
             UI.$('authPassword').focus();
         }, 100);
     },
 
     /**
-     * Обработка входа
+     * Handle sign in
      */
     async handleSignIn() {
         const identifier = UI.$('authIdentifier').value.trim();
         const password = UI.$('authPassword').value;
         const errorEl = UI.$('passwordError');
         
-        // Валидация
+        // Validation
         if (!identifier || !password) {
             errorEl.textContent = 'Please fill in all fields';
             return;
@@ -239,17 +238,17 @@ const App = {
             return;
         }
         
-        // Показываем загрузку
+        // Show loading
         this.setLoading(true);
         
-        // Входим
+        // Sign in
         const result = await Auth.signIn(identifier, password);
         
-        // Скрываем загрузку
+        // Hide loading
         this.setLoading(false);
         
         if (result.success) {
-            // Успешно - обновляем UI напрямую (на случай если listener не сработал)
+            // Success - update UI directly
             errorEl.textContent = '';
             Auth.user = result.user || await SupabaseClient.getCurrentUser();
             Auth.isAuthenticated = true;
@@ -258,26 +257,26 @@ const App = {
             this.initMainApp();
             UI.showNotification('Welcome back!');
         } else {
-            // Ошибка
+            // Error
             errorEl.textContent = result.error || 'Invalid credentials';
             this.showAuthError(result.error || 'Invalid credentials');
         }
     },
 
     /**
-     * Обработка регистрации
+     * Handle sign up
      */
     async handleSignUp() {
         const fullName = UI.$('authFullName').value.trim();
         const email = UI.$('authEmail').value.trim();
         const password = UI.$('authRegPassword').value;
         
-        // Сброс ошибок
+        // Reset errors
         UI.$('fullNameError').textContent = '';
         UI.$('emailError').textContent = '';
         UI.$('regPasswordError').textContent = '';
         
-        // Валидация
+        // Validation
         let hasError = false;
         
         if (!fullName || fullName.length < 2) {
@@ -297,22 +296,17 @@ const App = {
         
         if (hasError) return;
         
-        // Показываем загрузку
+        // Show loading
         this.setLoading(true);
         
-        // Регистрируем
+        // Sign up
         const result = await Auth.signUp(email, password, fullName);
         
-        // Скрываем загрузку
+        // Hide loading
         this.setLoading(false);
         
         if (result.success) {
-            // Успешно - обновляем UI напрямую
-            UI.$('fullNameError').textContent = '';
-            UI.$('emailError').textContent = '';
-            UI.$('regPasswordError').textContent = '';
-            
-            // Сразу входим после регистрации
+            // Success - auto login after registration
             Auth.user = result.user;
             Auth.isAuthenticated = true;
             await Auth.loadProfile();
@@ -320,13 +314,13 @@ const App = {
             this.initMainApp();
             UI.showNotification('Account created successfully!');
         } else {
-            // Ошибка
+            // Error
             this.showAuthError(result.error || 'Registration failed');
         }
     },
 
     /**
-     * Показать/скрыть загрузку
+     * Show/hide loading
      */
     setLoading(loading) {
         const authLoading = UI.$('authLoading');
@@ -338,7 +332,7 @@ const App = {
             }
         }
         
-        // Блокируем кнопки
+        // Disable buttons
         const buttons = document.querySelectorAll('.auth-btn');
         buttons.forEach(btn => {
             btn.disabled = loading;
@@ -346,7 +340,7 @@ const App = {
     },
 
     /**
-     * Показать ошибку авторизации
+     * Show auth error
      */
     showAuthError(message) {
         const authError = UI.$('authError');
@@ -354,7 +348,7 @@ const App = {
             authError.textContent = message;
             authError.classList.add('visible');
             
-            // Скрываем через 5 секунд
+            // Hide after 5 seconds
             setTimeout(() => {
                 authError.classList.remove('visible');
             }, 5000);
@@ -362,7 +356,7 @@ const App = {
     },
 
     /**
-     * Показать экран авторизации
+     * Show auth overlay
      */
     showAuthOverlay() {
         const authOverlay = UI.$('authOverlay');
@@ -373,7 +367,7 @@ const App = {
     },
 
     /**
-     * Скрыть экран авторизации
+     * Hide auth overlay
      */
     hideAuthOverlay() {
         const authOverlay = UI.$('authOverlay');
@@ -384,40 +378,42 @@ const App = {
     },
 
     /**
-     * Инициализировать основное приложение
+     * Initialize main app
      */
     initMainApp() {
-        // Настраиваем основной UI
+        // Setup main UI
         this.setupMainUI();
         
-        // Инициализируем чаты
+        // Initialize chat module
         Chat.init();
         
-        // Показываем приветствие
-        UI.showNotification('Welcome to Telegram Ultimate!');
+        // Show welcome notification
+        UI.showNotification('Welcome to Telegram!');
     },
 
     /**
-     * Настроить основной UI
+     * Setup main UI
      */
     setupMainUI() {
-        // Кнопка меню
+        // Menu button
         const menuBtn = UI.$('menuBtn');
         if (menuBtn) {
             menuBtn.addEventListener('click', () => {
-                // TODO: Открыть боковое меню
+                // TODO: Open side menu
+                console.log('Menu clicked');
             });
         }
 
-        // Кнопка назад (мобильная)
+        // Back button (mobile)
         const backBtn = UI.$('backBtn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
-                Chat.backToChatList();
+                UI.hideChatArea();
+                Chat.currentChatId = null;
             });
         }
 
-        // Отправка сообщения
+        // Send message
         const sendBtn = UI.$('sendBtn');
         const messageInput = UI.$('messageInput');
 
@@ -433,24 +429,25 @@ const App = {
                 }
             });
 
-            // Авто-ресайз
+            // Auto-resize
             messageInput.addEventListener('input', () => {
                 UI.autoResizeTextarea(messageInput);
             });
         }
 
-        // Поиск
+        // Search
         const searchInput = UI.$('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', UI.debounce(async (e) => {
                 const query = e.target.value.trim();
                 if (query.length >= 2) {
-                    // TODO: Реализовать поиск чатов
+                    // TODO: Implement chat search
+                    console.log('Search:', query);
                 }
             }, 300));
         }
 
-        // Обработка изменения размера окна
+        // Handle window resize
         window.addEventListener('resize', () => {
             if (!UI.isMobile() && Chat.currentChatId) {
                 UI.removeClass('app', 'is-chat-open');
@@ -459,10 +456,10 @@ const App = {
     }
 };
 
-// Инициализация при загрузке страницы
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
 
-// Экспорт
+// Export
 globalThis.App = App;

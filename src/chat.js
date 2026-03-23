@@ -1,351 +1,328 @@
-/* Telegram Ultimate - Chat Module */
+/* Telegram Ultimate - Chat Module (100% Telegram Clone) */
 
 const Chat = {
-    chats: [],
     currentChatId: null,
+    chats: [],
     messages: [],
-    subscriptions: [],
+    supabase: null,
 
     /**
-     * Инициализация модуля чатов
+     * Initialize chat module
      */
     async init() {
+        this.supabase = SupabaseClient.getClient();
+        
+        // Load initial chats
         await this.loadChats();
-        this.setupSubscriptions();
-        this.renderChatList();
+        
+        // Subscribe to realtime updates
+        this.subscribeToUpdates();
     },
 
     /**
-     * Загрузить список чатов
+     * Load user's chats
      */
     async loadChats() {
-        this.chats = await SupabaseClient.getUserChats();
-        this.renderChatList();
-    },
+        try {
+            const user = Auth.getUser();
+            if (!user) return;
 
-    /**
-     * Настроить подписки на изменения
-     */
-    setupSubscriptions() {
-        // Подписка на новые сообщения
-        const messagesSubscription = SupabaseClient.subscribeToChanges('messages', (payload) => {
-            if (payload.eventType === 'INSERT') {
-                this.handleNewMessage(payload.new);
-            }
-        });
+            // Get chats with last message
+            const { data, error } = await this.supabase
+                .from('chat_participants')
+                .select(`
+                    chat_id,
+                    chats:chat_id (
+                        id,
+                        name,
+                        type,
+                        created_at,
+                        last_message,
+                        last_message_at
+                    ),
+                    profiles:user_id (
+                        id,
+                        username,
+                        full_name,
+                        avatar_url
+                    )
+                `)
+                .eq('user_id', user.id);
 
-        this.subscriptions.push(messagesSubscription);
-    },
+            if (error) throw error;
 
-    /**
-     * Обработать новое сообщение
-     */
-    handleNewMessage(message) {
-        // Если сообщение в текущем чате
-        if (message.chat_id === this.currentChatId) {
-            this.messages.push(message);
-            this.renderMessage(message);
-            this.scrollToBottom();
+            // Format chats data
+            this.chats = (data || []).map(item => ({
+                id: item.chat_id,
+                name: item.chats?.name || item.profiles?.full_name || item.profiles?.username,
+                type: item.chats?.type || 'private',
+                created_at: item.chats?.created_at,
+                last_message: item.chats?.last_message,
+                last_message_at: item.chats?.last_message_at,
+                unread_count: 0 // TODO: Calculate unread
+            }));
+
+            // Sort by last message
+            this.chats.sort((a, b) => {
+                const aTime = new Date(a.last_message_at || 0);
+                const bTime = new Date(b.last_message_at || 0);
+                return bTime - aTime;
+            });
+
+            // Update UI
+            UI.updateChatList(this.chats);
+
+        } catch (error) {
+            console.error('Error loading chats:', error);
         }
-        
-        // Обновить список чатов
-        this.updateChatPreview(message.chat_id, message);
     },
 
     /**
-     * Открыть чат
+     * Open a chat
      */
     async openChat(chatId) {
+        if (!chatId || this.currentChatId === chatId) return;
+
         this.currentChatId = chatId;
-        const chat = this.chats.find(c => c.id === chatId);
         
+        // Find chat data
+        const chat = this.chats.find(c => c.id === chatId);
         if (!chat) return;
 
-        // Обновляем UI
-        this.updateChatHeader(chat);
+        // Update UI header
+        UI.updateChatHeader(chat);
         
-        // Загружаем сообщения
+        // Show chat area
+        UI.showChatArea();
+        
+        // Load messages
         await this.loadMessages(chatId);
         
-        // Отмечаем как прочитанное
-        await SupabaseClient.markMessagesAsRead(chatId);
-        
-        // На мобильных - показываем чат
-        if (UI.isMobile()) {
-            UI.addClass('app', 'is-chat-open');
-        }
+        // Focus input
+        UI.focusMessageInput();
+
+        // Update active state in sidebar
+        this.updateActiveChat();
     },
 
     /**
-     * Загрузить сообщения чата
+     * Load messages for a chat
      */
     async loadMessages(chatId) {
-        this.messages = await SupabaseClient.getChatMessages(chatId);
-        this.renderMessages();
+        try {
+            const { data, error } = await this.supabase
+                .from('messages')
+                .select('*')
+                .eq('chat_id', chatId)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            this.messages = data || [];
+            
+            // Update UI
+            const currentUser = Auth.getUser();
+            UI.updateMessages(this.messages, currentUser?.id);
+
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
     },
 
     /**
-     * Отправить сообщение
+     * Send a message
      */
-    async sendMessage(text) {
-        if (!this.currentChatId || !text.trim()) return;
+    async sendMessage(content) {
+        if (!content || !this.currentChatId) return;
 
-        const { data, error } = await SupabaseClient.sendMessage(
-            this.currentChatId, 
-            text
-        );
-
-        if (error) {
-            UI.showNotification('Ошибка отправки сообщения', 'error');
+        const user = Auth.getUser();
+        if (!user) {
+            UI.showNotification('Please sign in first');
             return;
         }
 
-        // Очищаем поле ввода
-        const input = UI.$('messageInput');
-        if (input) {
-            input.value = '';
-            input.style.height = 'auto';
-        }
+        content = content.trim();
+        if (!content) return;
 
-        // Обновляем список чатов
-        this.updateChatPreview(this.currentChatId, data);
+        try {
+            // Optimistic update
+            const optimisticMessage = {
+                id: 'temp-' + Date.now(),
+                chat_id: this.currentChatId,
+                sender_id: user.id,
+                content: content,
+                created_at: new Date().toISOString(),
+                status: 'sending'
+            };
+
+            // Add to UI immediately
+            this.messages.push(optimisticMessage);
+            UI.updateMessages(this.messages, user.id);
+            UI.clearMessageInput();
+
+            // Send to server
+            const { data, error } = await this.supabase
+                .from('messages')
+                .insert({
+                    chat_id: this.currentChatId,
+                    sender_id: user.id,
+                    content: content,
+                    type: 'text'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Update message with real ID
+            const index = this.messages.findIndex(m => m.id === optimisticMessage.id);
+            if (index >= 0) {
+                this.messages[index] = { ...data, status: 'sent' };
+                UI.updateMessages(this.messages, user.id);
+            }
+
+            // Update last message in chat
+            await this.updateChatLastMessage(this.currentChatId, content);
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            
+            // Mark as failed
+            const index = this.messages.findIndex(m => m.id.startsWith('temp-'));
+            if (index >= 0) {
+                this.messages[index].status = 'failed';
+                UI.updateMessages(this.messages, user.id);
+            }
+            
+            UI.showNotification('Failed to send message');
+        }
     },
 
     /**
-     * Создать новый чат
+     * Update chat's last message
      */
-    async createNewChat(participantId, type = 'private') {
-        const { data, error } = await SupabaseClient.createChat(
-            [participantId], 
-            type
-        );
+    async updateChatLastMessage(chatId, message) {
+        try {
+            await this.supabase
+                .from('chats')
+                .update({
+                    last_message: message,
+                    last_message_at: new Date().toISOString()
+                })
+                .eq('id', chatId);
 
-        if (error) {
-            UI.showNotification('Ошибка создания чата', 'error');
-            return null;
+            // Refresh chat list
+            await this.loadChats();
+
+        } catch (error) {
+            console.error('Error updating last message:', error);
         }
+    },
 
-        // Перезагружаем список чатов
-        await this.loadChats();
+    /**
+     * Update active chat in sidebar
+     */
+    updateActiveChat() {
+        // Remove active from all
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Add active to current
+        const currentItem = document.querySelector(`[data-chat-id="${this.currentChatId}"]`);
+        if (currentItem) {
+            currentItem.classList.add('active');
+        }
+    },
+
+    /**
+     * Subscribe to realtime updates
+     */
+    subscribeToUpdates() {
+        // Subscribe to new messages
+        this.supabase
+            .channel('messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages'
+            }, (payload) => {
+                this.handleNewMessage(payload.new);
+            })
+            .subscribe();
+    },
+
+    /**
+     * Handle new incoming message
+     */
+    handleNewMessage(message) {
+        const user = Auth.getUser();
         
-        // Открываем новый чат
-        if (data) {
-            this.openChat(data.id);
-        }
-
-        return data;
-    },
-
-    /**
-     * Обновить превью чата
-     */
-    updateChatPreview(chatId, message) {
-        const chat = this.chats.find(c => c.id === chatId);
-        if (chat) {
-            chat.lastMessage = message;
-            chat.updated_at = message.created_at;
-            this.renderChatList();
-        }
-    },
-
-    /**
-     * Обновить заголовок чата
-     */
-    updateChatHeader(chat) {
-        const titleEl = UI.$('chatTitle');
-        const avatarEl = UI.$('chatAvatar');
-        const statusEl = UI.$('chatStatus');
-
-        if (titleEl) {
-            titleEl.textContent = chat.title || this.getChatName(chat);
-        }
-
-        if (avatarEl) {
-            avatarEl.textContent = UI.getInitials(chat.title || this.getChatName(chat));
-        }
-
-        if (statusEl) {
-            // Проверяем онлайн статус
-            const isOnline = this.isChatOnline(chat);
-            statusEl.textContent = isOnline ? 'онлайн' : 'был(а) недавно';
-            UI.toggleClass(statusEl, 'online', isOnline);
-        }
-    },
-
-    /**
-     * Получить имя чата
-     */
-    getChatName(chat) {
-        if (chat.title) return chat.title;
-        
-        // Для приватных чатов - имя собеседника
-        if (chat.type === 'private' && chat.participants) {
-            const otherParticipant = chat.participants.find(
-                p => p.profiles.id !== Auth.getUser()?.id
-            );
-            if (otherParticipant) {
-                return otherParticipant.profiles.full_name || 
-                       otherParticipant.profiles.username;
+        // If message is for current chat
+        if (message.chat_id === this.currentChatId) {
+            // Check if already exists
+            const exists = this.messages.find(m => m.id === message.id);
+            if (!exists) {
+                this.messages.push(message);
+                UI.updateMessages(this.messages, user?.id);
             }
         }
-        
-        return 'Неизвестный чат';
+
+        // Refresh chat list (for last message update)
+        this.loadChats();
     },
 
     /**
-     * Проверить онлайн статус чата
+     * Create new chat with user
      */
-    isChatOnline(chat) {
-        if (chat.type === 'private' && chat.participants) {
-            const otherParticipant = chat.participants.find(
-                p => p.profiles.id !== Auth.getUser()?.id
-            );
-            return otherParticipant?.profiles?.is_online || false;
-        }
-        return false;
-    },
+    async createChat(userId) {
+        try {
+            const user = Auth.getUser();
+            if (!user) return;
 
-    /**
-     * Отрендерить список чатов
-     */
-    renderChatList() {
-        const container = UI.$('chatList');
-        if (!container) return;
+            // Create chat
+            const { data: chat, error: chatError } = await this.supabase
+                .from('chats')
+                .insert({ type: 'private' })
+                .select()
+                .single();
 
-        if (this.chats.length === 0) {
-            container.innerHTML = `
-                <div class="empty-chats">
-                    <div class="empty-icon">💬</div>
-                    <p>Нет сообщений</p>
-                </div>
-            `;
-            return;
-        }
+            if (chatError) throw chatError;
 
-        // Сортируем чаты по времени последнего сообщения
-        const sortedChats = [...this.chats].sort((a, b) => {
-            const timeA = new Date(a.updated_at || a.created_at);
-            const timeB = new Date(b.updated_at || b.created_at);
-            return timeB - timeA;
-        });
+            // Add participants
+            const participants = [
+                { chat_id: chat.id, user_id: user.id },
+                { chat_id: chat.id, user_id: userId }
+            ];
 
-        container.innerHTML = sortedChats.map(chat => this.createChatItem(chat)).join('');
+            const { error: partError } = await this.supabase
+                .from('chat_participants')
+                .insert(participants);
 
-        // Добавляем обработчики кликов
-        container.querySelectorAll('.chat-item').forEach(item => {
-            item.addEventListener('click', () => {
-                this.openChat(item.dataset.chatId);
-            });
-        });
-    },
+            if (partError) throw partError;
 
-    /**
-     * Создать элемент чата
-     */
-    createChatItem(chat) {
-        const isActive = chat.id === this.currentChatId;
-        const lastMessage = chat.lastMessage;
-        const chatName = this.getChatName(chat);
+            // Reload chats
+            await this.loadChats();
 
-        return `
-            <div class="chat-item ${isActive ? 'active' : ''}" data-chat-id="${chat.id}">
-                <div class="avatar">${UI.getInitials(chatName)}</div>
-                <div class="chat-info">
-                    <div class="chat-name">${UI.escapeHtml(chatName)}</div>
-                    <div class="chat-last">
-                        ${lastMessage ? UI.escapeHtml(lastMessage.text) : 'Нет сообщений'}
-                    </div>
-                </div>
-                <div class="chat-meta">
-                    <div class="chat-time">
-                        ${lastMessage ? UI.formatDate(lastMessage.created_at) : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    },
+            // Open the new chat
+            this.openChat(chat.id);
 
-    /**
-     * Отрендерить сообщения
-     */
-    renderMessages() {
-        const container = UI.$('messagesContainer');
-        if (!container) return;
+            return chat;
 
-        if (this.messages.length === 0) {
-            container.innerHTML = `
-                <div class="welcome-screen">
-                    <div class="welcome-content">
-                        <p>Нет сообщений</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = this.messages.map(msg => this.createMessageHTML(msg)).join('');
-        this.scrollToBottom();
-    },
-
-    /**
-     * Отрендерить одно сообщение
-     */
-    renderMessage(message) {
-        const container = UI.$('messagesContainer');
-        if (!container) return;
-
-        const messageHTML = this.createMessageHTML(message);
-        container.insertAdjacentHTML('beforeend', messageHTML);
-    },
-
-    /**
-     * Создать HTML сообщения
-     */
-    createMessageHTML(message) {
-        const isOwn = message.sender_id === Auth.getUser()?.id;
-        const sender = message.profiles || {};
-
-        return `
-            <div class="message ${isOwn ? 'outgoing' : 'incoming'} fade-in">
-                <div class="message-bubble">
-                    ${!isOwn ? `<div class="message-sender">${UI.escapeHtml(sender.full_name || sender.username)}</div>` : ''}
-                    <div class="message-text">${UI.escapeHtml(message.text)}</div>
-                    <div class="message-time">${UI.formatTime(message.created_at)}</div>
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Прокрутить к последнему сообщению
-     */
-    scrollToBottom() {
-        const container = UI.$('messagesContainer');
-        if (container) {
-            container.scrollTop = container.scrollHeight;
+        } catch (error) {
+            console.error('Error creating chat:', error);
+            UI.showNotification('Failed to create chat');
         }
     },
 
     /**
-     * Вернуться к списку чатов (мобильная версия)
+     * Go back to chat list (mobile)
      */
     backToChatList() {
         this.currentChatId = null;
-        UI.removeClass('app', 'is-chat-open');
-    },
-
-    /**
-     * Отписаться от всех подписок
-     */
-    cleanup() {
-        this.subscriptions.forEach(sub => {
-            if (sub && sub.unsubscribe) {
-                sub.unsubscribe();
-            }
-        });
-        this.subscriptions = [];
+        UI.hideChatArea();
     }
 };
 
-// Экспорт модуля
+// Export
 globalThis.Chat = Chat;

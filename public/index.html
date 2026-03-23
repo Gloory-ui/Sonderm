@@ -1,213 +1,219 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0088cc">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Telegram Ultimate</title>
-    <link rel="stylesheet" href="/variables.css">
-    <link rel="stylesheet" href="/style.css">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Telegram">
+    <title>Telegram</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Ccircle cx='120' cy='120' r='120' fill='%230088cc'/%3E%3Cpath fill='%23fff' d='M97.5 165.5c-9.3 2.4-15.3 4.6-18.2 5.5-2.9.9-4.9 1.4-6.1 1.4-1.2 0-2.2-.3-3-.8-.8-.5-1.5-1.2-2-2-.5-.8-.8-2-.8-3.5 0-1.5.1-3.1.4-4.8.3-1.7 1-4.5 2.2-8.4l17.8-53.5c1.3-4 2.4-7.4 3.2-10.1.8-2.7 1.7-5 2.6-7 .9-2 1.9-3.5 3-4.5 1.1-1 2.5-1.5 4.2-1.5 1.7 0 3.5.8 5.4 2.4 1.9 1.6 4.5 4.2 7.8 7.8 3.3 3.6 7.9 9.1 13.8 16.5l15.8 21.4c3.8-14.8 9.4-33.3 16.8-55.5 1.2-3.8 2.6-6.4 4.2-7.8 1.6-1.4 3.6-2.1 6-2.1 1.8 0 3.6.5 5.4 1.6 1.8 1.1 3.1 2.4 3.9 3.9.8 1.5 1.2 3.3 1.2 5.4 0 1.5-.1 2.9-.3 4.3-.2 1.4-.6 3.1-1.1 5.2l-15 48c-1.6 5.2-3 9.5-4.2 12.9-1.2 3.4-2.5 5.9-3.8 7.6-1.3 1.7-2.8 2.5-4.5 2.5-2.1 0-4.2-1.1-6.3-3.2-2.1-2.1-5.7-6.4-10.8-12.8l-20.8-27.8-10.4 15.4c-2.3 3.4-4.6 6.3-6.9 8.7-2.3 2.4-4.6 4.2-6.9 5.4-2.3 1.2-5.1 2.1-8.4 2.7z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="variables.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app" class="app">
-        <!-- Боковая панель (список чатов) -->
+    <!-- SVG Icons Definitions -->
+    <svg style="display: none;">
+        <defs>
+            <!-- Menu/Burger Icon -->
+            <symbol id="icon-menu" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+            </symbol>
+            
+            <!-- Search Icon -->
+            <symbol id="icon-search" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </symbol>
+            
+            <!-- Back Icon -->
+            <symbol id="icon-back" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </symbol>
+            
+            <!-- More/Three Dots -->
+            <symbol id="icon-more" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </symbol>
+            
+            <!-- Emoji Icon -->
+            <symbol id="icon-emoji" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+            </symbol>
+            
+            <!-- Attachment/Clip Icon -->
+            <symbol id="icon-attach" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+            </symbol>
+            
+            <!-- Send Icon -->
+            <symbol id="icon-send" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </symbol>
+            
+            <!-- Check/Read Icon -->
+            <symbol id="icon-check" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </symbol>
+            
+            <!-- Double Check/Read Icon -->
+            <symbol id="icon-check-double" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z"/>
+            </symbol>
+            
+            <!-- Phone Icon -->
+            <symbol id="icon-phone" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </symbol>
+            
+            <!-- Telegram Logo -->
+            <symbol id="logo-telegram" viewBox="0 0 240 240">
+                <circle cx="120" cy="120" r="120" fill="#0088cc"/>
+                <path fill="#fff" d="M97.5 165.5c-9.3 2.4-15.3 4.6-18.2 5.5-2.9.9-4.9 1.4-6.1 1.4-1.2 0-2.2-.3-3-.8-.8-.5-1.5-1.2-2-2-.5-.8-.8-2-.8-3.5 0-1.5.1-3.1.4-4.8.3-1.7 1-4.5 2.2-8.4l17.8-53.5c1.3-4 2.4-7.4 3.2-10.1.8-2.7 1.7-5 2.6-7 .9-2 1.9-3.5 3-4.5 1.1-1 2.5-1.5 4.2-1.5 1.7 0 3.5.8 5.4 2.4 1.9 1.6 4.5 4.2 7.8 7.8 3.3 3.6 7.9 9.1 13.8 16.5l15.8 21.4c3.8-14.8 9.4-33.3 16.8-55.5 1.2-3.8 2.6-6.4 4.2-7.8 1.6-1.4 3.6-2.1 6-2.1 1.8 0 3.6.5 5.4 1.6 1.8 1.1 3.1 2.4 3.9 3.9.8 1.5 1.2 3.3 1.2 5.4 0 1.5-.1 2.9-.3 4.3-.2 1.4-.6 3.1-1.1 5.2l-15 48c-1.6 5.2-3 9.5-4.2 12.9-1.2 3.4-2.5 5.9-3.8 7.6-1.3 1.7-2.8 2.5-4.5 2.5-2.1 0-4.2-1.1-6.3-3.2-2.1-2.1-5.7-6.4-10.8-12.8l-20.8-27.8-10.4 15.4c-2.3 3.4-4.6 6.3-6.9 8.7-2.3 2.4-4.6 4.2-6.9 5.4-2.3 1.2-5.1 2.1-8.4 2.7z"/>
+            </symbol>
+        </defs>
+    </svg>
+
+    <!-- Main App Container -->
+    <div class="app" id="app">
+        <!-- Sidebar (Chat List) -->
         <aside class="sidebar" id="sidebar">
-            <!-- Шапка -->
+            <!-- Sidebar Header -->
             <header class="sidebar-header">
-                <button class="menu-btn" id="menuBtn" title="Меню">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <button class="menu-btn" id="menuBtn" aria-label="Menu">
+                    <svg><use href="#icon-menu"/></svg>
                 </button>
-                <div class="search-wrapper">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Поиск">
+                <div class="search-container">
+                    <svg class="search-icon"><use href="#icon-search"/></svg>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search">
                 </div>
             </header>
-
-            <!-- Список чатов -->
+            
+            <!-- Chat List -->
             <div class="chat-list" id="chatList">
-                <div class="empty-chats">
-                    <div class="empty-icon">💬</div>
-                    <p>Нет сообщений</p>
-                </div>
+                <!-- Chats will be rendered here -->
             </div>
         </aside>
 
-        <!-- Основная область чата -->
+        <!-- Main Chat Area -->
         <main class="chat-area" id="chatArea">
-            <!-- Шапка чата -->
-            <header class="chat-header">
-                <button class="back-btn" id="backBtn" title="Назад">
-                    <svg viewBox="0 0 24 24" width="24" height="24">
-                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
-                    </svg>
-                </button>
-                <div class="chat-info">
-                    <div class="chat-avatar" id="chatAvatar">?</div>
-                    <div class="chat-meta">
-                        <h2 class="chat-title" id="chatTitle">Выберите чат</h2>
-                        <span class="chat-status" id="chatStatus">онлайн</span>
-                    </div>
-                </div>
-                <div class="chat-actions">
-                    <button class="action-btn" id="searchBtn" title="Поиск">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
-                        </svg>
+            <!-- Empty State -->
+            <div class="chat-empty" id="chatEmpty">
+                <svg viewBox="0 0 200 200">
+                    <use href="#logo-telegram"/>
+                </svg>
+                <p class="chat-empty-text">Select a chat to start messaging</p>
+            </div>
+            
+            <!-- Active Chat (Hidden by default) -->
+            <div class="chat-active hidden" id="chatActive">
+                <!-- Chat Header -->
+                <header class="chat-header">
+                    <button class="back-btn" id="backBtn" aria-label="Back">
+                        <svg><use href="#icon-back"/></svg>
                     </button>
-                    <button class="action-btn" id="moreBtn" title="Ещё">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" fill="currentColor"/>
-                        </svg>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Сообщения -->
-            <div class="messages-container" id="messagesContainer">
-                <div class="welcome-screen">
-                    <div class="welcome-content">
-                        <div class="welcome-icon">💬</div>
-                        <h1>Telegram Ultimate</h1>
-                        <p>Выберите чат, чтобы начать общение</p>
+                    <div class="chat-avatar" id="chatHeaderAvatar">
+                        <!-- Avatar -->
                     </div>
+                    <div class="chat-header-info">
+                        <div class="chat-header-name" id="chatHeaderName">Select a chat</div>
+                        <div class="chat-header-status" id="chatHeaderStatus">online</div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="header-btn" aria-label="Search">
+                            <svg><use href="#icon-search"/></svg>
+                        </button>
+                        <button class="header-btn" aria-label="More">
+                            <svg><use href="#icon-more"/></svg>
+                        </button>
+                    </div>
+                </header>
+                
+                <!-- Messages Container -->
+                <div class="messages-container" id="messagesContainer">
+                    <!-- Messages will be rendered here -->
+                </div>
+                
+                <!-- Compose Area -->
+                <div class="compose-area">
+                    <button class="compose-btn" aria-label="Emoji">
+                        <svg><use href="#icon-emoji"/></svg>
+                    </button>
+                    <button class="compose-btn" aria-label="Attach">
+                        <svg><use href="#icon-attach"/></svg>
+                    </button>
+                    <div class="message-input-container">
+                        <textarea class="message-input" id="messageInput" placeholder="Message" rows="1"></textarea>
+                    </div>
+                    <button class="compose-btn" id="sendBtn" aria-label="Send">
+                        <svg><use href="#icon-send"/></svg>
+                    </button>
                 </div>
             </div>
-
-            <!-- Поле ввода -->
-            <footer class="input-area">
-                <div class="input-wrapper">
-                    <button class="attach-btn" id="attachBtn" title="Вложение">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" fill="currentColor"/>
-                        </svg>
-                    </button>
-                    <div class="message-input-wrapper">
-                        <textarea 
-                            class="message-input" 
-                            id="messageInput" 
-                            placeholder="Напишите сообщение..." 
-                            rows="1"
-                        ></textarea>
-                    </div>
-                    <button class="emoji-btn" id="emojiBtn" title="Эмодзи">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" fill="currentColor"/>
-                        </svg>
-                    </button>
-                    <button class="send-btn" id="sendBtn" title="Отправить">
-                        <svg viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
-                        </svg>
-                    </button>
-                </div>
-            </footer>
         </main>
     </div>
 
-    <!-- Модальные окна -->
-    <div class="modal-overlay" id="modalOverlay"></div>
-
-    <!-- Экран авторизации (Telegram Login Style) -->
+    <!-- Auth Overlay (Login Screen) -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-container">
-            <!-- Логотип и заголовок -->
-            <div class="auth-header">
-                <div class="auth-logo">
-                    <svg viewBox="0 0 240 240" width="80" height="80">
-                        <defs>
-                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#37aee2"/>
-                                <stop offset="100%" style="stop-color:#0088cc"/>
-                            </linearGradient>
-                        </defs>
-                        <circle cx="120" cy="120" r="120" fill="url(#logoGradient)"/>
-                        <path fill="#fff" d="M97.5 165.5c-9.3 2.4-15.3 4.6-18.2 5.5-2.9.9-4.9 1.4-6.1 1.4-1.2 0-2.2-.3-3-.8-.8-.5-1.5-1.2-2-2-.5-.8-.8-2-.8-3.5 0-1.5.1-3.1.4-4.8.3-1.7 1-4.5 2.2-8.4l17.8-53.5c1.3-4 2.4-7.4 3.2-10.1.8-2.7 1.7-5 2.6-7 .9-2 1.9-3.5 3-4.5 1.1-1 2.5-1.5 4.2-1.5 1.7 0 3.5.8 5.4 2.4 1.9 1.6 4.5 4.2 7.8 7.8 3.3 3.6 7.9 9.1 13.8 16.5l15.8 21.4c3.8-14.8 9.4-33.3 16.8-55.5 1.2-3.8 2.6-6.4 4.2-7.8 1.6-1.4 3.6-2.1 6-2.1 1.8 0 3.6.5 5.4 1.6 1.8 1.1 3.1 2.4 3.9 3.9.8 1.5 1.2 3.3 1.2 5.4 0 1.5-.1 2.9-.3 4.3-.2 1.4-.6 3.1-1.1 5.2l-15 48c-1.6 5.2-3 9.5-4.2 12.9-1.2 3.4-2.5 5.9-3.8 7.6-1.3 1.7-2.8 2.5-4.5 2.5-2.1 0-4.2-1.1-6.3-3.2-2.1-2.1-5.7-6.4-10.8-12.8l-20.8-27.8-10.4 15.4c-2.3 3.4-4.6 6.3-6.9 8.7-2.3 2.4-4.6 4.2-6.9 5.4-2.3 1.2-5.1 2.1-8.4 2.7z"/>
-                    </svg>
-                </div>
-                <h1 class="auth-title" id="authTitle">Sign in to Telegram</h1>
-                <p class="auth-subtitle" id="authSubtitle">Please enter your credentials to continue</p>
+            <div class="auth-logo">
+                <svg width="160" height="160">
+                    <use href="#logo-telegram"/>
+                </svg>
             </div>
-
-            <!-- Форма -->
+            
+            <h1 class="auth-title" id="authTitle">Sign in to Telegram</h1>
+            <p class="auth-subtitle" id="authSubtitle">Please enter your credentials to continue</p>
+            
             <form class="auth-form" id="authForm">
+                <!-- Step 1: Email/Phone -->
                 <div class="auth-step" id="stepPhone">
                     <div class="form-group">
                         <label class="form-label">Phone Number or Email</label>
-                        <input 
-                            type="text" 
-                            class="form-input" 
-                            id="authIdentifier" 
-                            placeholder="Enter phone or email"
-                            autocomplete="email"
-                        >
+                        <input type="text" class="form-input" id="authIdentifier" placeholder="Enter phone or email" autocomplete="email">
                         <span class="form-error" id="identifierError"></span>
                     </div>
                     <button type="button" class="auth-btn" id="btnNext">NEXT</button>
                 </div>
-
+                
+                <!-- Step 2: Password -->
                 <div class="auth-step hidden" id="stepPassword">
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input 
-                            type="password" 
-                            class="form-input" 
-                            id="authPassword" 
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                        >
+                        <input type="password" class="form-input" id="authPassword" placeholder="Enter your password" autocomplete="current-password">
                         <span class="form-error" id="passwordError"></span>
                     </div>
                     <button type="button" class="auth-btn" id="btnSignIn">SIGN IN</button>
                 </div>
-
+                
+                <!-- Step 3: Registration -->
                 <div class="auth-step hidden" id="stepRegister">
                     <div class="form-group">
                         <label class="form-label">Full Name</label>
-                        <input 
-                            type="text" 
-                            class="form-input" 
-                            id="authFullName" 
-                            placeholder="Your full name"
-                        >
+                        <input type="text" class="form-input" id="authFullName" placeholder="Your full name">
                         <span class="form-error" id="fullNameError"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        <input 
-                            type="email" 
-                            class="form-input" 
-                            id="authEmail" 
-                            placeholder="your@email.com"
-                        >
+                        <input type="email" class="form-input" id="authEmail" placeholder="your@email.com">
                         <span class="form-error" id="emailError"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input 
-                            type="password" 
-                            class="form-input" 
-                            id="authRegPassword" 
-                            placeholder="Create password (min 6 chars)"
-                        >
+                        <input type="password" class="form-input" id="authRegPassword" placeholder="Create password (min 6 chars)">
                         <span class="form-error" id="regPasswordError"></span>
                     </div>
                     <button type="button" class="auth-btn" id="btnSignUp">SIGN UP</button>
                 </div>
             </form>
-
-            <!-- Переключатель -->
+            
             <div class="auth-switch">
                 <span id="switchText">Don't have an account?</span>
                 <button type="button" class="switch-btn" id="btnSwitch">Sign up</button>
             </div>
-
-            <!-- Ошибка -->
+            
             <div class="auth-error" id="authError"></div>
-
-            <!-- Загрузка -->
+            
             <div class="auth-loading hidden" id="authLoading">
                 <div class="spinner"></div>
                 <span>Please wait...</span>
@@ -215,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Скрипты -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/src/supabase.js"></script>
     <script src="/src/ui.js"></script>
