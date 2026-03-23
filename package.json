@@ -1,13 +1,13 @@
 {
-  "name": "my-mess",
+  "name": "telegram-ultimate",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Telegram Web Clone - 100% visual fidelity",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["telegram", "messenger", "clone"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -15,8 +15,6 @@
     "@supabase/supabase-js": "^2.99.3",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "npm": "^11.12.0",
-    "socket.io": "^4.8.3",
-    "start": "^5.1.0"
+    "socket.io": "^4.8.3"
   }
 }
