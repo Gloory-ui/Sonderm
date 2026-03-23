@@ -3,19 +3,20 @@
 const App = {
     currentAuthStep: 'login', // 'login' | 'register'
     isAuthVisible: true,
+    isAuthProcessing: false, // Защита от race condition
 
     /**
      * Инициализация приложения
      */
     async init() {
+        // Подписываемся на изменения авторизации СНАЧАЛА
+        this.setupAuthStateListener();
+        
         // Настраиваем UI авторизации
         this.setupAuthUI();
         
         // Проверяем авторизацию
         await this.checkAuth();
-        
-        // Подписываемся на изменения авторизации
-        this.setupAuthStateListener();
     },
 
     /**
@@ -53,15 +54,26 @@ const App = {
         const supabase = SupabaseClient.getClient();
         
         supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event);
+            console.log('🔄 Auth state changed:', event, session?.user?.email);
+            
+            // Игнорируем если уже обрабатываем
+            if (this.isAuthProcessing) {
+                console.log('⏳ Auth processing, skipping...');
+                return;
+            }
             
             switch (event) {
                 case 'SIGNED_IN':
-                    Auth.user = session.user;
-                    Auth.isAuthenticated = true;
-                    await Auth.loadProfile();
-                    this.hideAuthOverlay();
-                    this.initMainApp();
+                case 'INITIAL_SESSION':
+                    if (session) {
+                        this.isAuthProcessing = true;
+                        Auth.user = session.user;
+                        Auth.isAuthenticated = true;
+                        await Auth.loadProfile();
+                        this.hideAuthOverlay();
+                        this.initMainApp();
+                        this.isAuthProcessing = false;
+                    }
                     break;
                     
                 case 'SIGNED_OUT':
